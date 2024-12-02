@@ -1,0 +1,137 @@
+/* Attribute Editor Styles */
+
+/* Modal overlay */
+.attribute-editor-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2); /* Updated background opacity */
+    display: block;
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    color: var(--vscode-editor-foreground);
+    z-index: 1000;
+  }
+  
+  /* Content container */
+  .attribute-editor-container {
+    background-color: var(--vscode-editor-background);
+    padding: 20px;
+    border-radius: 5px;
+    min-width: 400px;
+    text-align: left;
+    box-shadow: 0 0 10px var(--vscode-widget-shadow);
+    border: 1px solid var(--vscode-editorWidget-border);
+    position: absolute;
+  }
+  
+  /* Center the container if no position is set */
+  .attribute-editor-container.centered {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  /* Each line in the editor */
+  .attribute-editor-line {
+    height: 1.5em;
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  
+  /* Labels for non-editable lines */
+  .attribute-editor-label {
+    width: 100%;
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    color: var(--vscode-editor-foreground);
+  }
+  
+  /* Editable input line */
+  .attribute-editor-input {
+    width: 100%;
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    color: var(--vscode-input-foreground);
+    background-color: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-border);
+    padding: 2px 4px;
+    box-sizing: border-box;
+    border-radius: 2px;
+  }
+  
+  .attribute-editor-input.invalid {
+    color: #ff8d8d; /* Custom color for invalid input */
+  }
+  
+  /* Close button */
+  .attribute-editor-close-button {
+    margin-top: 10px;
+    padding: 5px 10px;
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-background);
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  
+  .attribute-editor-close-button:hover {
+    background-color: var(--vscode-button-hoverBackground);
+  }
+
+.attribute-editor-input,
+.attribute-editor-label,
+.attribute-editor-close-button {
+  cursor: default;
+}
+
+  /* Awesomplete Styles */
+  
+  /* Adjust Awesomplete dropdown to match VSCode theme */
+  .awesomplete {
+    width: 100%;
+  }
+  
+  .awesomplete ul {
+    position: absolute;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background-color: var(--vscode-editor-background);
+    border: 1px solid var(--vscode-editorWidget-border);
+    box-shadow: 0 2px 8px var(--vscode-widget-shadow);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1001;
+  }
+  
+  .awesomplete li {
+    padding: 4px 8px;
+    cursor: pointer;
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    color: var(--vscode-editor-foreground);
+    background-color: var(--vscode-editor-background);
+  }
+  
+  .awesomplete li:hover,
+  .awesomplete li[aria-selected="true"] {
+    background-color: var(--vscode-list-hoverBackground);
+    color: var(--vscode-list-hoverForeground);
+  }
+  
+  .awesomplete mark {
+    background-color: transparent;
+    font-weight: bold;
+    color: var(--vscode-editor-foreground);
+  }
+  
+  /* Hide the "No results found" message */
+  .awesomplete span[role="status"] {
+    display: none;
+  }

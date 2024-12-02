@@ -1,0 +1,280 @@
+/* Base styles for the modal */
+.vscode-swal-popup {
+    background-color: #1e1e1e; /* Dark theme background */
+    color: #d4d4d4; /* Foreground text color */
+    font-family: 'Segoe WPC', 'Segoe UI', sans-serif;
+    font-size: 14px;
+    border: 1px solid #3c3c3c; /* Widget border color */
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5); /* Widget shadow */
+    border-radius: 5px;
+  }
+  
+  /* Header styles */
+  .vscode-swal-header {
+    border-bottom: 1px solid #3c3c3c; /* Border for header */
+  }
+  
+  /* Title styles */
+  .vscode-swal-title {
+    font-size: 14px;
+    font-weight: normal;
+    color: #d4d4d4; /* Same as foreground text */
+  }
+  
+  /* Close button styles */
+  .vscode-swal-close-button {
+    color: #d4d4d4;
+  }
+  
+  /* Icon styles */
+  .vscode-swal-icon {
+    color: #d4d4d4; /* Matches foreground text */
+  }
+  
+  /* Content styles */
+  .vscode-swal-content {
+    font-size: 14px;
+    color: #d4d4d4; /* Foreground text */
+  }
+  
+  /* Input styles */
+  .vscode-swal-input {
+    background-color: #3c3c3c; /* Input background */
+    color: #d4d4d4; /* Input foreground */
+    border: 1px solid #555555; /* Input border */
+    border-radius: 3px;
+    padding: 5px;
+    font-family: 'Segoe WPC', 'Segoe UI', sans-serif;
+    font-size: 14px;
+  }
+  
+  /* Actions (buttons) container */
+  .vscode-swal-actions {
+    border-top: 1px solid #3c3c3c; /* Divider for actions */
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+  
+  /* Confirm button styles */
+  .vscode-swal-confirm-button {
+    background-color: #007acc; /* Button background */
+    color: #ffffff; /* Button text */
+    border: none;
+    border-radius: 3px;
+    padding: 6px 12px;
+    font-family: 'Segoe WPC', 'Segoe UI', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .vscode-swal-confirm-button:hover {
+    background-color: #005a9e; /* Button hover */
+  }
+  
+  /* Deny button styles */
+  .vscode-swal-deny-button {
+    background-color: #3c3c3c; /* Secondary button background */
+    color: #d4d4d4; /* Secondary button text */
+    border: none;
+    border-radius: 3px;
+    padding: 6px 12px;
+    font-family: 'Segoe WPC', 'Segoe UI', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .vscode-swal-deny-button:hover {
+    background-color: #555555; /* Hover state */
+  }
+  
+  /* Cancel button styles */
+  .vscode-swal-cancel-button {
+    background-color: #1e1e1e; /* Matches modal background */
+    color: #d4d4d4; /* Matches text color */
+    border: 1px solid #555555; /* Matches input border */
+    border-radius: 3px;
+    padding: 6px 12px;
+    font-family: 'Segoe WPC', 'Segoe UI', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .vscode-swal-cancel-button:hover {
+    background-color: #3c3c3c; /* Hover state */
+  }
+  
+  /* Footer styles */
+  .vscode-swal-footer {
+    border-top: 1px solid #3c3c3c; /* Divider line */
+    margin-top: 10px;
+    padding-top: 10px;
+    font-size: 12px;
+    color: #d4d4d4; /* Footer text color */
+  }
+  
+  /* Adjusting the modal's width */
+  .vscode-swal-popup {
+    width: 400px; /* Default modal width */
+  }
+  
+  /* Remove SweetAlert2's default animations */
+  .swal2-show {
+    animation: none !important;
+  }
+  .swal2-hide {
+    animation: none !important;
+  }
+  
+  /* Adjust overlay background */
+  html body div.swal2-container {
+    background-color: rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  /* Scrollbar styles */
+  .vscode-swal-popup ::-webkit-scrollbar {
+    width: 10px;
+    z-index: 1000;
+  }
+  
+  .vscode-swal-popup ::-webkit-scrollbar-track {
+    background: #2a2a2a; /* Scrollbar track */
+  }
+  
+  .vscode-swal-popup ::-webkit-scrollbar-thumb {
+    background: #3c3c3c; /* Scrollbar thumb */
+    border-radius: 5px;
+  }
+  
+  html body.swal2-height-auto { 
+    height: 100% !important; 
+  }
+
+  /* Attribute Editor Styles */
+
+/* Modal overlay */
+.attribute-editor-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  /* Removed flex properties */
+  display: block;
+  font-family: 'Segoe WPC', 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #D4D4D4;
+  z-index: 1000;
+}
+
+/* Content container */
+.attribute-editor-container {
+  background-color: #1E1E1E;
+  padding: 20px;
+  border-radius: 5px;
+  min-width: 400px;
+  text-align: left;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border: 1px solid #3C3C3C;
+  position: absolute; /* Allows positioning within the modal */
+}
+
+/* Center the container if no position is set */
+.attribute-editor-container.centered {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Each line in the editor */
+.attribute-editor-line {
+  height: 1.5em;
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+/* Labels for non-editable lines */
+.attribute-editor-label {
+  width: 100%;
+  font-family: 'Segoe WPC', 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #D4D4D4;
+}
+
+/* Editable input line */
+.attribute-editor-input {
+  width: 100%;
+  font-family: 'Segoe WPC', 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #CCCCCC;
+  background-color: #3C3C3C;
+  border: 1px solid #555555;
+  padding: 2px 4px;
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
+.attribute-editor-input.invalid {
+  color: #ff8d8d; /* Updated invalid input color */
+}
+
+/* Close button */
+.attribute-editor-close-button {
+  margin-top: 10px;
+  padding: 5px 10px;
+  font-family: 'Segoe WPC', 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #FFFFFF;
+  background-color: #0E639C;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.attribute-editor-close-button:hover {
+  background-color: #1177BB;
+}
+
+/* Awesomplete Styles */
+
+/* Adjust Awesomplete dropdown to match VSCode Dark theme */
+.awesomplete {
+  width: 100%;
+}
+
+.awesomplete ul {
+  position: absolute;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: #1E1E1E;
+  border: 1px solid #3C3C3C;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1001;
+}
+
+.awesomplete li {
+  padding: 4px 8px;
+  cursor: pointer;
+  font-family: 'Segoe WPC', 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #D4D4D4;
+  background-color: #1E1E1E;
+}
+
+.awesomplete li:hover,
+.awesomplete li[aria-selected="true"] {
+  background-color: #094771;
+  color: #FFFFFF;
+}
+
+.awesomplete mark {
+  background-color: transparent;
+  font-weight: bold;
+  color: #D4D4D4;
+}
+
+/* Hide the "No results found" message */
+.awesomplete span[role="status"] {
+  display: none;
+}

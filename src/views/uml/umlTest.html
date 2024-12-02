@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style nonce="${nonce}">
+                html, body {
+                    width: 100%;
+                    height: 100%;
+                    margin: 0;
+                    padding: 0;
+                    overflow: hidden; /* Prevent scrolling the entire page */
+                }
+
+                #scroll-container {
+                    width: 100%;
+                    height: 100%; /* Full viewport size */
+                    overflow: auto; /* Enable scrolling */
+                    position: relative; /* Ensure scroll-container positions properly */
+                }
+
+                #paper {
+                    width: 3000px; /* Fixed size for your paper */
+                    height: 3000px;
+                    position: relative; /* Required for JointJS positioning */
+                    margin: 0;
+                    padding: 0;
+                }
+        </style>
+        <title>umlTest Environment</title>
+        <link rel="stylesheet" href="../../../media/awesomplete.theme.css">
+        <link rel="stylesheet" href="umlTest.css">
+        <script src="../../../media/sweetalert2.all.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="commandPalette.css">        
+    </head>
+<body>
+    <div id="uml-toolbox"></div>         
+    <div id="scroll-container">
+        <div id="paper"></div>
+    </div>
+
+    <script src="../../../media/joint.min.js"></script>
+    <script src="commandPalette.js"></script>
+    <script src="../../../media/awesomplete.min.js"></script>
+    <script src="attributeEditor.js"></script>
+    <script src="pusherTools.js"></script>
+
+
+    <script type="text/javascript">
+
+
+const { shapes: defaultShapes, dia, util, linkTools } = joint;
+
+// Your existing JointJS code
+/*
+General notes:
+
+element:pointerdown event will fire on UMLMetaView and paper ONLY if a a non-magnet (no drawstart) area is clicked.
+
+*/
+
+
+   // Mock metaModel with getDataTypes function
+   const metaModel = {
+      getDataTypes: async function() {
+        return [
+          {
+            "packageName": "Primitives",
+            "node": {
+              "name": "String"
+            }
+          },
+          {
+            "packageName": "Primitives",
+            "node": {
+              "name": "Integer"
+            }
+          },
+          {
+            "packageName": "Primitives",
+            "node": {
+              "name": "Boolean"
+            }
+          },
+          {
+            "packageName": "Primitives",
+            "node": {
+              "name": "Float"
+            }
+          }
+        ];
+      }
+    };
+
+// umlShapes.js===============================================================================================
+joint.shapes.custom = {};
+
+
+/**
+ * Extends a method of a Javascript object that was not defined using ES6 class symantics.
+ * Example usage:
+ * ```
+ * this.someFunc = extendMethod(this, 'someFunc', function(superMethod, ...args) {
+ *   // Your additional logic before the original method
+ *   console.log('Custom logic before the original function.');
+ *
+ *   // Call the original method
+ *   superMethod();
+ *
+ *   // Or, if you need to modify arguments:
+ *   // superMethod('newArg1', 'newArg2');
+ * 
+ *   // Your additional logic after the original method
+ *   console.log('Custom logic after the original function.');
+ * });
+ * ```
+ */
+function extendMethod(object, methodName, newLogic) {
+    const originalMethod = object[methodName];
+    return function(...args) {
+        const superMethod = (...superArgs) => {
+            return originalMethod.apply(this, superArgs.length ? superArgs : args);
+        };
+        return newLogic.apply(this, [superMethod, ...args]);
+    };
+}
+
+
+const UMLMetaView = joint.dia.ElementView.extend({
+    initialize: function(...arguments) {
+        joint.dia.ElementView.prototype.initialize.apply(this, arguments);
+        this.listenTo(this.model, 'meta:refresh', function() {
+            this.resize();
+        });
+
+        this.on('meta:dragstart', function(payload) {
+            // console.log(`UMLMetaView: meta:dragstart: ${payload.type}`);
+            this.model.trigger('meta:dragstart', payload);
+        });
+
+        this.on('element:mouseenter', function() {
+            // console.log('UMLMetaView: element:mouseenter');
+        });
+
+        // Extend the default dragLinkStart method so we can send
+        // a notification to ourselves that a link creation drag
+        // is about to start.
+        this.dragLinkStart = extendMethod(this, 'dragLinkStart', function(superMethod, ...args) {
+            // console.log('UMLMetaView: dragLinkStart');
+            this.trigger('meta:dragstart', { type: "UMLAssociation" });
+            superMethod();
+        });
+    }
+});
+
+
+function umlClass_findClosestAnchor(x, y) {
+    const relAnchors = this.getLinkAnchors();
+    const relPoint = this.getRelativePointFromAbsolute({ x, y });
+    const distances = relAnchors.map((anchor) => {
+        return g.Point(relPoint).squaredDistance(anchor);
+    });
+    const minDistance = Math.min(...distances);
+    return relAnchors[distances.indexOf(minDistance)];
+}
+
+
+class UMLClassBase extends joint.dia.Element {
+
+    constructor(attributes = {}, options = {}) {
+        super(attributes, options);
+        this.findClosestAnchor = umlClass_findClosestAnchor;
+    }
+
+    defaults() {
+        return joint.util.defaultsDeep( {
+            type: 'custom.UMLClassBase',
+            name: '',
+            packageName: '',
+            stereotypes: [],
+            attributes: [],
+            methods: [],
+            attrs: {
+                body: { magnet: false },
+                umlClassNameRect: {  'width': 'calc(w)','stroke': 'black', 'stroke-width': 2, 'fill': '#cfcd8a' },
+                umlClassAttrsRect: {  'width': 'calc(w)','stroke': 'black', 'stroke-width': 2, 'fill': '#faf9ac' },
+                umlClassMethodsRect: {  'width': 'calc(w)','stroke': 'black', 'stroke-width': 2, 'fill': '#faf9ac' },
+
+                umlClassStereoText: {
+                    'ref': 'umlClassNameRect',
+                    'ref-y': 0,
+                    'ref-x': .5,
+                    'text-anchor': 'middle',
+                    'y-alignment': 'hanging',
+                    'font-weight': 'normal',
+                    'font-style': 'italic',
+                    'fill': 'black',
+                    'font-size': 15,
+                    'font-family': 'Arial'
+                },
+                umlClassPackageText: {
+                    'ref': 'umlClassNameRect',
+                    'ref-y': 0,
+                    'ref-x': .5,
+                    'text-anchor': 'middle',
+                    'y-alignment': 'hanging',
+                    'font-weight': 'normal',
+                    'font-style': 'normal',
+                    'fill': 'black',
+                    'font-size': 14,
+                    'font-family': 'Arial'
+                },
+                umlClassNameText: {
+                    'ref': 'umlClassNameRect',
+                    'ref-y': 0,
+                    'ref-x': .5,
+                    'text-anchor': 'middle',
+                    'y-alignment': 'hanging',
+                    'font-weight': 'bold',
+                    'fill': 'black',
+                    'font-size': 18,
+                    'font-family': 'Trebuchet MS'
+                },        
+                umlClassAttrsText: {
+                    'ref': 'umlClassAttrsRect', 'ref-y': .1, 'ref-x': 5, 'y-alignment': 'hanging',
+                    'fill': 'black', 'font-size': 14, 'font-family': 'Courier New'
+                },
+                umlClassMethodsText: {
+                    'ref': 'umlClassMethodsRect', 'ref-y': .1, 'ref-x': 5, 'y-alignment': 'hanging',
+                    'fill': 'black', 'font-size': 14, 'font-family': 'Courier New'
+                }
+            }
+        }, super.defaults);
+    }
+
+    preinitialize() {
+        this.markup = [{
+            tagName: 'g',
+            children: [
+
+                {
+                tagName: 'g',
+                selector: 'body',
+                children: [
+                        {
+                        tagName: 'rect',
+                        selector: 'umlClassNameRect',
+                        className: 'uml-class-name-rect',
+                        },
+
+                        {
+                        tagName: 'rect',
+                        selector: 'umlClassAttrsRect',
+                        className: 'uml-class-attrs-rect',
+                        },
+
+                        {
+                        tagName: 'rect',
+                        selector: 'umlClassMethodsRect',
+                        className: 'uml-class-methods-rect',
+                        },
+                ]
+                },
+
+                {
+                tagName: 'text',
+                selector: 'umlClassStereoText',
+                className: 'uml-class-stereo-text',
+                groupSelector: 'texts'
+                },
+
+                {
+                tagName: 'text',
+                selector: 'umlClassPackageText',
+                className: 'uml-class-package-text',
+                groupSelector: 'texts'
+                },
+
+                {
+                tagName: 'text',
+                selector: 'umlClassNameText',
+                className: 'uml-class-name-text',
+                groupSelector: 'texts'
+                },
+
+                {
+                tagName: 'text',
+                selector: 'umlClassAttrsText',
+                className: 'uml-class-attrs-text',
+                groupSelector: 'texts'
+                },
+
+                {
+                tagName: 'text',
+                selector: 'umlClassMethodsText',
+                className: 'uml-class-methods-text',
+                groupSelector: 'texts'
+                },
+            ]
+        }];
+
+    }
+
+    initialize(...args) {
+        super.initialize(...args);
+        this.on('change:name change:packageName change:attributes change:methods change:stereotypes', function() {
+            this.updateRectangles();
+        }, this);
+
+        this.updateRectangles();
+    }
+
+    getClassName() {
+        return this.get('name');
+    }
+
+    updateRectangles() {
+
+        var attrs = this.get('attrs');
+
+        var rects = [
+            { txtName: 'Stereo', txtScale: 1.08, text: this.get('stereotypes') },
+            { txtName: 'Package', txtScale: 1.0, text: this.get('packageName') },
+            { txtName: 'Name', txtScale: 1.15, text: this.getClassName() },
+            { txtName: 'Attrs', txtScale: 1.0, text: this.get('attributes') },
+            { txtName: 'Methods', txtScale: 1.0, text: this.get('methods') }
+        ];
+
+        var offsetY = 0;
+        var maxLength = 0;
+        var refY = 0;
+        this.sectionY = [];
+        const sectionY = this.sectionY;
+        rects.forEach(function(rect, ndx) {
+
+            // Calculate the width and height of the text lines
+            var lines = Array.isArray(rect.text) ? rect.text : [rect.text];
+            var rectHeight = lines.length * 18 * rect.txtScale;
+            maxLength = Math.max(maxLength,...lines.map(str => str.length));
+
+            // Set the text lines for this section
+            attrs['umlClass' + rect.txtName + 'Text'].text = lines.join('\n');
+
+            if (ndx >= 3) {
+               // attrs and methods get their own box - set the height and translate
+               attrs['umlClass' + rect.txtName + 'Rect'].height = rectHeight;
+               attrs['umlClass' + rect.txtName + 'Rect'].transform = 'translate(0,' + offsetY + ')';
+            }
+            else {
+                attrs['umlClass' + rect.txtName + 'Text']['ref-y'] = refY;
+                refY += (lines.length * 18 * rect.txtScale);
+                if (ndx === 2) {
+                    // stereo, package, and name all share the top box. Set the cumulative height
+                    rectHeight += 5;
+                    attrs['umlClass' + rect.txtName + 'Rect'].height = offsetY+rectHeight;
+                }
+            }
+            sectionY.push(offsetY);
+            offsetY += rectHeight;
+        });
+
+        // Now, resize the entire box
+        this.resize(maxLength * 8.5 + 5, offsetY);
+    }
+
+    getLinkAnchors() {
+            const { width, height } = this.size();
+            const anchors = [];
+
+
+            if (ActiveTool?.useTopBottomAnchors) {
+                for (let x = 20; x < width; x += 20) {
+                    anchors.push({ x, y: 0 });
+                    anchors.push({ x, y: height });
+                }
+            }
+            else {
+                for (let y = 20; y < height; y += 20) {
+                    anchors.push({ x: 0, y });
+                    anchors.push({ x: width, y });
+                }
+            }
+            return anchors;
+    }    
+
+}
+joint.shapes.custom.UMLClassBase = UMLClassBase;
+joint.shapes.custom.UMLClassBaseView = UMLMetaView;
+
+
+class UMLActorBase extends joint.dia.Element {
+
+    constructor(attributes = {}, options = {}) {
+        super(attributes, options);
+    }
+
+    defaults() {
+        return joint.util.defaultsDeep( {
+            type: 'custom.UMLActorBase',
+            size: {
+                width: 35,
+                height: 60
+            },
+            name: '',
+            attrs: {
+                background: {
+                    width: "calc(w)",
+                    height: "calc(h)",
+                    fill: "transparent"
+                },
+                body: {
+                    d: `M 0 calc(0.4 * h) h calc(w) M 0 calc(h) calc(0.5 * w) calc(0.7 * h) calc(w) calc(h) M calc(0.5 * w) calc(0.7 * h) V calc(0.3 * h)`,
+                    fill: "none",
+                    stroke: 'black',
+                    strokeWidth: 2
+                },
+                head: {
+                    cx: "calc(0.5 * w)",
+                    cy: `calc(0.15 * h)`,
+                    r: `calc(0.15 * h)`,
+                    stroke: 'black',
+                    strokeWidth: 2,
+                    fill: "#ffffff"
+                },
+                label: {
+                    y: "calc(h + 10)",
+                    x: "calc(0.5 * w)",
+                    textAnchor: "middle",
+                    textVerticalAnchor: "top",
+                    fontSize: 14,
+                    fontFamily: "sans-serif",
+                    fill: 'black',
+                    textWrap: {
+                        width: "calc(3 * w)",
+                        height: null
+                    }
+                }
+            }
+        }, super.defaults);
+    }
+
+    preinitialize() {
+        this.markup = util.svg`
+            <rect @selector="background" />
+            <path @selector="body" />
+            <circle @selector="head" />
+            <text @selector="label" />
+        `;
+    }
+
+    initialize(...args)  {
+        super.initialize(...args);
+        this.on('change:name', function() {
+            this.updateLabels();
+        }, this);
+
+        this.updateLabels();
+    }
+
+    updateLabels() {
+        this.attr('label/text', this.get('name'));
+    }
+}
+joint.shapes.custom.UMLActorBase = UMLActorBase;
+joint.shapes.custom.UMLActorBaseVuew = UMLMetaView;
+
+
+class UMLLinkBase extends joint.shapes.standard.Link {
+
+    constructor(attributes = {}, options = {}) {
+        super(attributes, options);
+    }
+
+    defaults() {
+        return joint.util.defaultsDeep( {
+            type: 'custom.UMLLinkBase',
+            metaId: '', 
+            labels: [],
+            sourceEnd: {
+                metaId: '',
+                name: '',
+                multiplicity: ''
+            },
+            targetEnd: {
+                metaId: '',
+                name: '',
+                multiplicity: ''
+            },
+            attrs: {
+                'line': {
+                    sourceMarker: {
+                        d: ''
+                    },
+                    targetMarker: {
+                        d: ''
+                    }
+                }
+            },
+            router: {
+                name: 'orthogonal'
+            },
+            connector: { name: 'jumpover' }            
+        }, super.defaults);
+    }
+
+    initialize(...args) {
+        super.initialize(...args);
+        this.on('change:sourceEnd change:targetEnd', function() {
+            this.updateLabels();
+        }, this);
+
+        this.updateLabels();
+    }
+
+
+    resolveShapeId(metaId) {
+        return null;
+    }
+
+    updateLabels() {
+       const labels = [];
+       const sourceEnd = this.get('sourceEnd');
+
+       if (sourceEnd && sourceEnd.metaId) {
+           const shapeId = this.resolveShapeId(sourceEnd.metaId);
+           if (shapeId) {
+               this.prop('source', { id: shapeId, anchor: { name: 'midSide' } });
+               if (sourceEnd.name) {
+                   labels.push({
+                        'attrs': {
+                            'text': {
+                                'text': sourceEnd.name,
+                                'text-anchor': 'start',
+                                'fill': 'black',
+                                'font-size': 14, 
+                                'font-family': 'Courier New'
+                            },
+                            'rect': {
+                                'stroke': 'black',
+                                'fill': 'none',
+                                'strokeWidth': 0
+                            }
+                        },
+                        'position': {
+                            'distance': 5, 
+                            '_offset': { x: 10, y: -10 },
+                            'offset': -12,
+                            'args': { 'keepGradient': true }
+                        }
+                   });
+               }
+               if (sourceEnd.multiplicity) {
+                   labels.push({
+                        'attrs': {
+                            'text': {
+                                'text': sourceEnd.multiplicity,
+                                'text-anchor': 'start',
+                                'fill': 'black',
+                                'font-size': 14, 
+                                'font-family': 'Courier New'
+                            },
+                            'rect': {
+                                'stroke': 'black',
+                                'fill': 'none',
+                                'strokeWidth': 0
+                            }
+                        },
+                        'position': {
+                            'distance': 5, 
+                            'offset': 12,
+                            'args': { 'keepGradient': true }
+
+                        }
+                   });
+               }
+           }
+       }
+
+       const targetEnd = this.get('targetEnd');
+
+       if (targetEnd && targetEnd.metaId) {
+           const shapeId = this.resolveShapeId(targetEnd.metaId);
+           if (shapeId) {
+               this.prop('target', { id: shapeId, anchor: { name: 'midSide' } });
+               if (targetEnd.name) {
+                   labels.push({
+                        'attrs': {
+                            'text': {
+                                'text': targetEnd.name,
+                                'text-anchor': 'end',
+                                'fill': 'black',
+                                'font-size': 14, 
+                                'font-family': 'Courier New'
+                            },
+                            'rect': {
+                                'stroke': 'black',
+                                'fill': 'none',
+                                'strokeWidth': 0
+                            }
+                        },
+                        'position': {
+                            'distance': -5, 
+                            '_offset': { x: -10, y: -10 } ,
+                            'offset': -12,
+                            'args': { 'keepGradient': true }
+                        }
+                   });
+               }
+               if (targetEnd.multiplicity) {
+                   labels.push({
+                        'attrs': {
+                            'text': {
+                                'text': targetEnd.multiplicity,
+                                'text-anchor': 'end',
+                                'fill': 'black',
+                                'font-size': 14, 
+                                'font-family': 'Courier New'
+                            },
+                            'rect': {
+                                'stroke': 'black',
+                                'fill': 'none',
+                                'strokeWidth': 0
+                            }
+                        },
+                        'position': {
+                            'distance': -5, 
+                            'offset': { x: -10, y: 15 },
+                            '_offset': 12,
+                            'args': { 'keepGradient': true }
+                        }
+                   });
+               }
+           }
+       }
+
+       this.set('labels', labels);
+    }
+
+}
+joint.shapes.custom.UMLLinkBase = UMLLinkBase;
+
+
+// -------------------------------------------------------------
+// Tools
+// -------------------------------------------------------------
+
+const COLOR_CONNECTOR = '#8ef56c';
+const COLOR_CONNECTING = '#5bb53f';
+
+const HighlightAnchorPoints = dia.HighlighterView.extend({
+    tagName: 'g',
+    attributes: {
+        stroke: '#131e29',
+        fill: COLOR_CONNECTOR,
+        strokeWidth: 2,
+    },
+
+    highlight(cellView) {
+        if (cellView?.model?.getLinkAnchors) {
+            const anchors = cellView.model.getLinkAnchors();
+            const children = anchors.map((anchor) => {
+                return {
+                    tagName: 'circle',
+                    attributes: { cx: anchor.x, cy: anchor.y, r: 5 },
+                };
+            });
+            this.renderChildren(children);
+        }
+    },
+});
+
+let activeClassEditor = null;
+const mockJsonClass = {
+      "_id": "278c7dbe-c175-4bfc-b729-9fb041f37764",
+      "name": "MyClass",
+      "_type": "UMLClass",
+      "ownedElements": [
+        {
+          "_id": "0fed7244-0f76-4cf3-8723-d5c090e43718",
+          "name": "attribute1",
+          "_type": "UMLAttribute",
+          "visibility": "public",
+          "type": {
+            "name": "String"
+          },
+          "multiplicity": "0..1"
+        },
+        {
+          "_id": "1fed7244-0f76-4cf3-8723-d5c090e43719",
+          "name": "attribute2",
+          "_type": "UMLAttribute",
+          "visibility": "private",
+          "type": {
+            "name": "Integer"
+          },
+          "multiplicity": "1..*"
+        }
+      ]
+    };
+
+class ClassToolBox {
+
+    constructor() {
+        this.boundaryTool = new joint.elementTools.Boundary({
+            focusOpacity: 0.5,
+            padding: 20,
+            useModelGeometry: true
+        });
+
+        this.attributeEditorTool = new joint.elementTools.Button({
+            x: '7%',
+            y: '50%',
+            magnet: 'body',
+            scale: 1.5,
+            action: function(evt, classView, tool) {
+                console.log(`Launch attribute editor for class ${classView.model?.attributes?.name}`);
+                activeClassEditor = new AttributeEditor();
+                activeClassEditor.setModel(mockJsonClass);
+
+                const divWidth = 400; // Width of the DIV
+                const paperWidth = classView.paper.el.clientWidth; // Get the display width of the paper's body
+
+                // Get the bounding box of the shape
+                const bbox = classView.getBBox();
+
+                // Absolute positions of the shape
+                const shapeTopRightX = bbox.x + bbox.width;
+                const shapeTopRightY = bbox.y;
+                const shapeTopLeftX = bbox.x;
+
+                // Check if the DIV fits to the right
+                if (shapeTopRightX + divWidth <= paperWidth) {
+                    // Position the DIV to the right
+                    activeClassEditor.setPosition(shapeTopRightX, shapeTopRightY);
+                } else {
+                    // Position the DIV to the left
+                    activeClassEditor.setPosition(shapeTopLeftX - divWidth, shapeTopRightY);
+                }
+                activeClassEditor.activate();
+            },
+            markup: [{
+                tagName: 'circle',
+                selector: 'button',
+                attributes: {
+                    'r': 7,
+                    'fill': '#5bb53f',
+                    'cursor': 'pointer'
+                }
+            }, {
+                tagName: 'path',
+                selector: 'icon',
+                attributes: {
+                    'd': 'M -4 0 L 4 0 M 0 -4 L 0 4',
+                    'fill': 'none',
+                    'stroke': '#FFFFFF',
+                    'stroke-width': 2,
+                    'pointer-events': 'none'
+                }
+            }]
+        });
+
+        // this.connectButtonLeft = new joint.elementTools.Connect({
+        //     x: '0%',
+        //     y: '50%',
+        //     magnet: 'body',
+        //     scale: 1.5,
+        //     markup: [{
+        //         tagName: 'circle',
+        //         selector: 'button',
+        //         attributes: {
+        //             'r': 7,
+        //             'fill': COLOR_CONNECTING,
+        //             'cursor': 'pointer'
+        //         }
+        //     }, {
+        //         tagName: 'path',
+        //         selector: 'icon',
+        //         attributes: {
+        //             'd': 'M 4 -1 L 0 -1 L 0 -4 L -4 0 L 0 4 L 0 1 L 4 1 z',
+        //             'fill': '#FFFFFF',
+        //             'stroke': 'none',
+        //             'stroke-width': 2,
+        //             'pointer-events': 'none'
+        //         }
+        //     }]
+        // });
+
+
+        this.removeButton = new joint.elementTools.Remove({
+            focusOpacity: 0.5,
+            rotate: true,
+            x: '0%',
+            y: '0%',
+            offset: { x: 0, y: 0 },
+            action: function(evt, elementView, toolView) {
+                if (confirm('Permanently remove this class from the model?')) {
+                    elementView.model.remove({ ui: true, tool: toolView.cid });
+                }
+            },
+            scale: 1.5
+        });     
+        
+        this.toolBox = new joint.dia.ToolsView({
+            tools: [
+                this.boundaryTool, 
+                this.attributeEditorTool,
+                this.removeButton
+            ]
+        });        
+    }
+
+    static get defaultTools() {
+        if (!ClassToolBox.defaultToolBox) {
+            ClassToolBox.defaultToolBox = new ClassToolBox();
+        }
+        return ClassToolBox.defaultToolBox.toolBox;
+    }    
+}
+
+
+
+class LinkToolBox {
+
+    constructor() {
+        this.verticesTool = new joint.linkTools.Vertices();
+        this.segmentsTool = new joint.linkTools.Segments();
+        this.sourceArrowheadTool = new joint.linkTools.SourceArrowhead();
+        this.targetArrowheadTool = new joint.linkTools.TargetArrowhead();
+        this.sourceAnchorTool = new joint.linkTools.SourceAnchor();
+        this.targetAnchorTool = new joint.linkTools.TargetAnchor();
+        this.boundaryTool = new joint.linkTools.Boundary();
+        this.removeButton = new joint.linkTools.Remove({
+            distance: '88%',
+            action: function(evt, linkView, toolView) {
+                if (confirm('Permanently remove this link from the model?')) {
+                    linkView.model.remove({ ui: true, tool: toolView.cid });
+                }
+            },
+            scale: 1.5
+        });
+
+        this.toolBox = new joint.dia.ToolsView({
+            tools: [
+                this.verticesTool, this.segmentsTool,
+                this.sourceAnchorTool, this.targetAnchorTool,
+                this.boundaryTool, this.removeButton
+            ]
+        });
+    }
+
+    static get defaultTools() {
+        if (!LinkToolBox.defaultToolBox) {
+            LinkToolBox.defaultToolBox = new LinkToolBox();
+        }
+        return LinkToolBox.defaultToolBox.toolBox;
+    }
+}
+
+
+
+// Returns TRUE if shapeModel represents a UMLClass and if a click at 
+// specified localClickPos (which is in the shape's local coords)
+// is close to the left or right of the shape's border.
+function canStartClassLink(shapeModel, shapeClickPos) {
+    if (shapeModel?.attributes?.type === 'custom.UMLClass') {
+       const bbox = shapeModel.getBBox();
+       return (shapeClickPos.x <= 20 || shapeClickPos.x >= bbox.width - 20);
+    }
+    return false;
+}
+
+
+// Returns TRUE if shapeModel represents a UMLClass and if a click at 
+// specified localClickPos (which is in the shape's local coords)
+// is close to the top or bottom of the shape's border.
+function canStartGeneralization(shapeModel, shapeClickPos) {
+    if (shapeModel?.attributes?.type === 'custom.UMLClass') {
+       const bbox = shapeModel.getBBox();
+       return (shapeClickPos.y <= 20 || shapeClickPos.y >= bbox.height - 20);
+    }
+    return false;
+}
+
+
+
+// Creates an association between sourceModel and targetModel provided
+// they are both UMLClass shapes. If the link is considered invalid,
+// do nothing.
+function createAssociation(sourceModel, sourcePos, targetModel, targetPos) {
+    if (sourceModel?.attributes?.type === 'custom.UMLClass' && 
+        targetModel?.attributes?.type === 'custom.UMLClass') {
+        console.log(`TODO: create association from ${sourceModel.attributes.name} at ${JSON.stringify(sourcePos)} to ${targetModel.attributes.name} at ${JSON.stringify(targetPos)}`);
+    }
+}
+
+
+
+// Creates a dependency between sourceModel and targetModel provided
+// they are both UMLClass or UMLActor shapes. If the link is considered invalid,
+// do nothing.
+function createDependency(sourceModel, sourcePos, targetModel, targetPos) {
+    const allowedTypes = ['custom.UMLClass', 'custom.UMLActor'];
+    if (allowedTypes.includes(sourceModel?.attributes?.type) && 
+        allowedTypes.includes(targetModel?.attributes?.type)) {
+        console.log(`TODO: create dependency link from ${sourceModel.attributes.name} at ${JSON.stringify(sourcePos)} to ${targetModel.attributes.name} at ${JSON.stringify(targetPos)}`);
+    }
+}
+
+
+
+// Creates a generallization between sourceModel and targetModel provided
+// they are both UMLClass shapes. If the link is considered invalid,
+// do nothing.
+function createGeneralization(sourceModel, sourcePos, targetModel, targetPos) {
+    if (sourceModel?.attributes?.type === 'custom.UMLClass' && 
+        targetModel?.attributes?.type=== 'custom.UMLClass') {
+        console.log(`TODO: create association from ${sourceModel.attributes.name} at ${JSON.stringify(sourcePos)} to ${targetModel.attributes.name} at ${JSON.stringify(targetPos)}`);
+    }
+}
+
+
+function createNewClassOnClick(stereotypeName) {
+    return function(clickPos) {
+        if (stereotypeName) {
+            console.log(`TODO: create new class with stereotype ${stereotypeName} at ${JSON.stringify(clickPos)}`);
+        }
+        else {
+            console.log(`TODO: create new class at ${JSON.stringify(clickPos)}`);
+        }
+    }
+}
+
+
+function addActorOnClickWithName(actorName) {
+    return function(clickPos) {
+        console.log(`TODO: add actor ${actorName} at ${JSON.stringify(clickPos)}`);
+    }
+}
+
+
+function createNewActorOnClick(clickPos) {
+    console.log(`TODO: create new actor at ${JSON.stringify(clickPos)}`);
+}
+
+
+function createAssociationProxy() {
+    return new UMLLinkProxy();
+}
+
+function createDependencyProxy() {
+    return new UMLDependencyProxy();
+}
+
+function createGeneralizationProxy() {
+    return new UMLGeneralizationProxy();
+}
+
+
+const ActiveTool = {
+
+    // canStartLink(shapeModel, shapeClickPos)
+    // Returns TRUE if a link can be started from the specified shape
+    // having been clicked at shapeClickPos. If TRUE is returned
+    // getLinkProxy() will be called to obtain the link proxy.
+    canStartLink: null,
+
+
+    // getLinkProxy()
+    // Returns a UMLLinkProxy instance
+    getLinkProxy: null,
+
+
+    // createLink(sourceModel, sourcePos, targetModel, targetPos)
+    // Creates the actual link between the two models, if appropriate
+    createLink: null,
+
+    // onPaperClick(clickPos)
+    // Called when the paper is clicked on a blank space.
+    // If appropriate, a new shape should be created.
+    onPaperClick: null,
+
+
+    // useTopBottomAnchors
+    // If TRUE, a class link will use the top and bottom anchors
+    // of the shape. Otherwise, it will use the left and right
+    useTopBottomAnchors: false,
+
+    clear() {
+        commandPalette.setActiveTool(null);
+        ActiveTool.canStartLink = null;
+        ActiveTool.getLinkProxy = null;
+        ActiveTool.createLink = null;
+        ActiveTool.onPaperClick = null;
+        ActiveTool.useTopBottomAnchors = false;
+        verticalPusherTool.deactivate(false);
+        horizontalPusherTool.deactivate(false);
+    }
+};
+
+
+
+const commandPalette = new CommandPalette({
+    columnCount: 3,
+    commands: [
+        {
+            svg: svgClass,
+            exec() {
+                ActiveTool.clear();
+                ActiveTool.onPaperClick = createNewClassOnClick();
+                commandPalette.setActiveTool(svgClass);
+            },
+        },
+
+        {
+            svg: svgEntity,
+            exec() {
+                ActiveTool.clear();
+                ActiveTool.onPaperClick = createNewClassOnClick('Entity');
+                commandPalette.setActiveTool(svgEntity);
+            },
+        },
+
+        {
+            svg: svgService,
+            exec() {
+                ActiveTool.clear();
+                ActiveTool.onPaperClick = createNewClassOnClick('Service');
+                commandPalette.setActiveTool(svgService);
+            },
+        },
+    
+        {
+            svg: svgAssociation,
+            exec() {
+                ActiveTool.clear();
+                ActiveTool.canStartLink = canStartClassLink;
+                ActiveTool.getLinkProxy = createAssociationProxy;
+                ActiveTool.createLink = createAssociation;
+                ActiveTool.onPaperClick = ActiveTool.clear;
+                commandPalette.setActiveTool(svgAssociation);
+            },
+        },
+
+        {
+            svg: svgDependency,
+            exec() {
+                ActiveTool.clear();
+                ActiveTool.canStartLink = canStartClassLink;
+                ActiveTool.getLinkProxy = createDependencyProxy;
+                ActiveTool.createLink = createDependency;
+                ActiveTool.onPaperClick = ActiveTool.clear;
+                commandPalette.setActiveTool(svgDependency);
+            },
+        },
+
+        {
+            svg: svgGeneralization,
+            exec() {
+                ActiveTool.clear();
+                ActiveTool.canStartLink = canStartGeneralization;
+                ActiveTool.getLinkProxy = createGeneralizationProxy;
+                ActiveTool.createLink = createGeneralization;
+                ActiveTool.useTopBottomAnchors = true;
+                commandPalette.setActiveTool(svgGeneralization);
+            },
+        },
+
+        {
+            svg: svgActor,
+            exec() {
+                ActiveTool.clear();
+                ActiveTool.onPaperClick = createNewActorOnClick;
+                commandPalette.setActiveTool(svgActor);
+            },
+        },
+
+        {
+            svg: svgUser,
+            exec() {
+                ActiveTool.clear();
+                ActiveTool.onPaperClick = addActorOnClickWithName('User');
+                commandPalette.setActiveTool(svgUser);
+            },
+        },
+
+        {
+            svg: svgAdmin,
+            exec() {
+                ActiveTool.clear();
+                ActiveTool.onPaperClick = addActorOnClickWithName('AdminRole');
+                commandPalette.setActiveTool(svgAdmin);
+            },
+        },
+
+
+        {
+            svg: svgVerticalPush,
+            exec() {
+                ActiveTool.clear();
+                commandPalette.setActiveTool(svgVerticalPush);
+                verticalPusherTool.activate();
+            },
+        },
+
+        {
+            svg: svgHorizontalPush,
+            exec() {
+                ActiveTool.clear();
+                commandPalette.setActiveTool(svgHorizontalPush);
+                horizontalPusherTool.activate();
+            },
+        },
+
+
+    ],
+});
+
+
+// End umlShapes.js ===============================================
+
+metaToShape = {};
+
+class UMLClass extends UMLClassBase {
+
+    constructor(attributes = {}, options = {}) {
+        super(attributes, options);
+    }
+
+    defaults() {
+        return joint.util.defaultsDeep( {
+            type: 'custom.UMLClass',
+            metaId: '',
+        }, super.defaults());
+    }
+
+    initialize(...args) {
+        super.initialize(...args);
+        this.on('meta:dragstart', function(payload) {
+            console.log(`UMLClass: meta:dragstart: ${payload.type}`);
+        });
+        this.setAttribsFromModel();
+    }
+
+    setAttribsFromModel() {
+        // this.prop('name', "MyClass");
+        this.prop('package', "com.example");
+        this.prop('stereotypes', ["<<interface>>"]);
+        this.prop('attributes', [ "+attribute1: String", "-attribute2: int", "+attribute3: int", "-attribute4: int" ]);
+        this.prop('methods', [ "+operation1(): void", "-operation2(param: Type): int" ]);
+    }
+}
+joint.shapes.custom.UMLClass = UMLClass;
+joint.shapes.custom.UMLClassView = UMLMetaView;
+
+
+
+class UMLLink extends UMLLinkBase { //.define('custom.UMLLink', {}, {
+
+    constructor(attributes = {}, options = {}) {
+        super(attributes, options);
+    }
+
+    defaults() {
+        return joint.util.defaultsDeep( {
+            type: 'custom.UMLLink',
+            metaId: '',
+        }, super.defaults());
+    }
+
+    resolveShapeId(metaId) {
+        return metaToShape[metaId];
+    }
+}
+joint.shapes.custom.UMLLink = UMLLink;
+
+
+class UMLActor extends UMLActorBase {
+
+        constructor(attributes = {}, options = {}) {
+            super(attributes, options);
+        }
+
+
+        defaults() {
+            return joint.util.defaultsDeep( {
+                type: 'custom.UMLActor',
+                metaId: '',
+            }, super.defaults());
+        }
+
+        initialize(...args) {
+            super.initialize(...args);
+            this.setAttribsFromModel();
+        }
+
+        setAttribsFromModel() {
+            // this.prop('name', "My Actor");
+        }
+}
+joint.shapes.custom.UMLActor = UMLActor;
+joint.shapes.custom.UMLActorView = UMLMetaView;
+
+
+
+class UMLAssociation extends UMLLink { 
+
+constructor(attributes = {}, options = {}) {
+        super(attributes, options);
+    }
+
+    defaults() {
+        return joint.util.defaultsDeep( {
+            type: 'custom.UMLAssociation'
+        }, super.defaults());
+    }
+
+    initialize(...args) {
+        super.initialize(...args);
+        this.setAttribsFromModel();
+    }
+
+    setAttribsFromModel() {
+        // this.prop('sourceEnd/metaId', "class1");
+        this.prop('sourceEnd/name', "mySource");
+        this.prop('sourceEnd/multiplicity', "1");
+        // this.prop('targetEnd/metaId', "class2");
+        this.prop('targetEnd/name', "myTarget");
+        this.prop('targetEnd/multiplicity', "0..*");
+    }
+
+}
+joint.shapes.custom.UMLAssociation = UMLAssociation;
+
+
+
+
+class UMLDependency extends UMLLink { 
+
+constructor(attributes = {}, options = {}) {
+        super(attributes, options);
+    }
+
+    defaults() {
+        return joint.util.defaultsDeep( {
+            type: 'custom.UMLDependency',
+            attrs: {
+                line: {
+                    targetMarker: {
+                        'type': 'path',
+                        'd': 'M 10 -5 0 0 10 5 z'
+                    }            
+                }
+            },
+            router: {
+                name: 'normal'
+            }                        
+        }, super.defaults());
+    }
+
+    initialize(...args) {
+        super.initialize(...args);
+        this.setAttribsFromModel();
+    }
+
+    setAttribsFromModel() {
+        // this.prop('sourceEnd/metaId', "class1");
+        // this.prop('targetEnd/metaId', "class2");
+    }
+
+}
+joint.shapes.custom.UMLDependency = UMLDependency;
+
+
+
+class UMLLinkProxy extends joint.shapes.standard.Link {
+
+    constructor(attributes = {}, options = {}) {
+        super(attributes, options);
+    }
+
+    defaults() {
+        return joint.util.defaultsDeep( {
+            type: 'custom.UMLLinkProxy',
+            labels: [],
+            attrs: {
+                'line': {
+                    sourceMarker: {
+                        d: ''
+                    },
+                    targetMarker: {
+                        d: ''
+                    },
+                    stroke: COLOR_CONNECTING,
+                    strokeWidth: 2,
+                }
+            },
+            source: {
+                anchor: 'topLeft'
+            },
+            target: {
+                anchor: 'topLeft'
+            },
+            router: {
+                name: 'rightAngle',
+                margin: 40
+            },
+            connector: { name: 'jumpover' }            
+        }, super.defaults);
+    }
+
+}
+joint.shapes.custom.UMLLinkProxy = UMLLinkProxy;
+
+
+class UMLDependencyProxy extends joint.shapes.standard.Link {
+
+constructor(attributes = {}, options = {}) {
+    super(attributes, options);
+}
+
+defaults() {
+    return joint.util.defaultsDeep( {
+        type: 'custom.UMLDependencyProxy',
+        labels: [],
+        attrs: {
+            'line': {
+                sourceMarker: {
+                    d: ''
+                },
+                stroke: COLOR_CONNECTING,
+                strokeWidth: 2,
+            }
+        },
+        router: {
+            name: 'normal',
+        },
+        connector: { name: 'jumpover' }            
+    }, super.defaults);
+}
+
+
+}
+joint.shapes.custom.UMLDependencyProxy = UMLDependencyProxy;
+
+
+class UMLGeneralizationProxy extends joint.shapes.standard.Link {
+
+constructor(attributes = {}, options = {}) {
+    super(attributes, options);
+}
+
+defaults() {
+    return joint.util.defaultsDeep( {
+        type: 'custom.UMLGeneralizationProxy',
+        labels: [],
+        attrs: {
+            'line': {
+                sourceMarker: {
+                    d: ''
+                },
+                targetMarker: {
+                    'type': 'path',
+                    'd': 'M 6 -8 L -6 0 L 6 8 z',
+                    'fill': 'white',
+                    'stroke': COLOR_CONNECTING,
+                    'stroke-width': 1
+                },
+                stroke: COLOR_CONNECTING,
+                strokeWidth: 2,
+            }
+        },
+        router: {
+            name: 'normal',
+        },
+        connector: { name: 'jumpover' }            
+    }, super.defaults);
+}
+
+
+}
+joint.shapes.custom.UMLGeneralizationProxy = UMLGeneralizationProxy;
+
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+    console.log('Starting test code...');
+
+    const graph = new joint.dia.Graph();
+    const paper = new joint.dia.Paper({
+        el: document.getElementById('paper'),
+        model: graph,
+        width: 3000,
+        height: 3000,
+        gridSize: 10,
+        drawGrid: true,
+
+        defaultConnector: {
+            name: 'straight',
+            args: {
+                cornerType: 'line',
+            },
+        },
+
+        // This will only get called if the ActiveTool.canStartLink() function
+        // has returned true. It is assumed that in that case, the active tool's
+        // getLinkProxy has been defined.
+        defaultLink: function (elementView, magnet) {
+            return ActiveTool.getLinkProxy();
+        },
+ 
+
+        // After the proxy link has been defined, delegate the link creation to the tool
+        // IF the link is actually connecting two elements
+        // Regardless, return FALSE to the link proxy is removed from the model.
+        // The ActiveTool.createLink function should create the real link if appropriate
+        allowLink: function(linkView, paper) {
+            var graph = paper.model;
+            const sourceModel = linkView?.sourceView?.model;
+            const targetModel = linkView?.targetView?.model;
+            if (ActiveTool.createLink && sourceModel && targetModel) {
+                const sourceBBox = sourceModel.getBBox();
+                const targetBBox = targetModel.getBBox();
+                const sourcePos = { x: linkView.sourcePoint.x - sourceBBox.x, y: linkView.sourcePoint.y - sourceBBox.y };
+                const targetPos = { x: linkView.targetPoint.x - targetBBox.x, y: linkView.targetPoint.y - targetBBox.y };
+                ActiveTool.createLink(linkView.sourceView.model, sourcePos, linkView.targetView.model, targetPos);
+            }
+            return false;
+        },
+
+        defaultRouter: function(vertices, _options, linkView) {
+            if (!linkView.sourceView || !linkView.targetView) {
+                return [];
+            }
+            return joint.routers.rightAngle(
+                vertices,
+                {
+                    useVertices: true,
+                    margin: 40,
+                },
+                linkView
+            );
+        },
+
+        defaultConnectionPoint: { name: 'boundary', args: { }},
+
+        connectionStrategy: function(end, view, _magnet, coords) {
+            const size = view.model.size();
+            if (view.model.findClosestAnchor) {
+                const anchor = view.model.findClosestAnchor(coords.x, coords.y);
+                return {
+                    anchor: {
+                        name: 'modelCenter',
+                        args: {
+                            dx: anchor.x - size.width / 2,
+                            dy: anchor.y - size.height / 2,
+                        },
+                    },
+                    magnet: 'body',
+                    id: end.id,
+                };
+            }
+        },
+
+        snapLinks: true,
+
+        highlighting: {
+            // Whenever a link is connected to an element, highlight the anchors of the element
+            // (with the custom `anchors` highlighter defined above)
+            connecting: {
+                name: 'anchorPoints',
+            },
+        },
+
+        // Extend the default highlighters and add our custom highlighter
+        highlighterNamespace: {
+            ...joint.highlighters,
+            anchorPoints: HighlightAnchorPoints,
+        },
+
+        validateConnection(sourceView, _, targetView) {
+            return sourceView.model.isElement() && targetView.model.isElement() && sourceView !== targetView;
+        },
+
+
+        // Control whether or not a link creation drag can be started
+        // Delegate this decision to the ActiveTool's canStartLink()
+        // method.
+        validateMagnet: function(cellView, magnet, evt) {
+
+            if (ActiveTool.canStartLink) {
+
+                const shapeModel = cellView.model;
+
+                // Get the click position in the page (screen) coordinates
+                const clickPageCoords = { x: evt.clientX, y: evt.clientY };
+
+                // Convert the page coordinates to local coordinates relative to the Paper
+                const clickPaperCoords = paper.pageToLocalPoint(clickPageCoords);
+
+                // Get the model position
+                const cellPosition = shapeModel.position();
+
+                // Translate to the cell's local coordinates
+                const modelClickPos = {
+                    x: clickPaperCoords.x - cellPosition.x,
+                    y: clickPaperCoords.y - cellPosition.y
+                };
+                return ActiveTool.canStartLink(shapeModel, modelClickPos);
+            }
+            return false;
+        }
+    });
+
+
+    let verticalPusherTool = new VerticalPusherTool(paper, graph);
+    let horizontalPusherTool = new HorizontalPusherTool(paper, graph);
+
+    let currentPaperScale = 1;
+
+// Add mouse wheel listener
+document.getElementById('scroll-container').addEventListener('wheel', (event) => {
+    if (event.ctrlKey || event.metaKey) { // Check for Ctrl or Command key
+        event.preventDefault(); // Prevent default scrolling/zooming behavior
+
+        const delta = event.deltaY > 0 ? -0.01 : 0.01; // Zoom in or out
+        currentPaperScale = Math.max(0.2, Math.min(currentPaperScale + delta, 5)); // Clamp scale between 0.2 and 5
+        paper.scale(currentPaperScale, currentPaperScale);
+    }
+});
+
+function animateScale(targetScale) {
+   const currentScale = paper.scale();
+   const step = 0.03 * (targetScale - currentScale.sx); // Adjust step size
+   
+   function stepAnimation() {
+       if (Math.abs(targetScale - currentScale.sx) > 0.03) {
+           currentScale.sx += step;
+           currentScale.sy += step;
+           paper.scale(currentScale.sx, currentScale.sy);
+           requestAnimationFrame(stepAnimation);
+       } else {
+           paper.scale(targetScale, targetScale); // Final correction
+       }
+   }
+
+   stepAnimation();
+   currentPaperScale = targetScale;
+
+}
+
+
+paper.on('blank:pointerdblclick', () => {
+   animateScale(1.0);
+   // paper.translate(0, 0); // Optional translation reset
+});
+
+
+
+
+
+
+
+    // Create an instance of UMLClass
+    const umlClass1 = new joint.shapes.custom.UMLClass({
+        metaId: 'class1',
+        position: { x: 30, y: 30 },
+       name: 'Class 1'
+    });
+
+
+    const umlClass2 = new joint.shapes.custom.UMLClass({
+       metaId: 'class2',
+       position: { x: 550, y: 90 },
+       name: 'Class 2'
+    });
+
+metaToShape['class1'] = umlClass1.id;
+metaToShape['class2'] = umlClass2.id;
+
+    const umlAssoc = new joint.shapes.custom.UMLAssociation({
+        sourceEnd: { metaId: 'class1' },
+        targetEnd: { metaId: 'class2' },
+        metaId: 'assoc1'
+    });
+
+
+  const umlActor = new joint.shapes.custom.UMLActor({
+    metaId: 'actor1',
+    name: 'User Role',
+    position: {
+       x: 400,
+       y: 250
+    },
+  });
+  metaToShape['actor1'] = umlActor.id;
+
+
+  const umlDep = new joint.shapes.custom.UMLDependency({
+        sourceEnd: { metaId: 'class2' },
+        targetEnd: { metaId: 'actor1' },
+        metaId: 'dep1'
+    });
+
+
+    // Add the UMLClass to the graph
+    graph.addCell(umlClass1);
+    graph.addCell(umlClass2);
+    graph.addCell(umlAssoc);
+    graph.addCell(umlActor);
+    graph.addCell(umlDep);
+
+    paper.on('link:mouseenter', function(linkView) {
+       linkView.removeTools();
+       linkView.addTools(LinkToolBox.defaultTools);
+    });
+
+    paper.on('link:mouseleave', function(linkView) {
+       linkView.removeTools();
+    });
+
+    paper.on('element:mouseenter', function(elementView) {
+        elementView.highlight();
+        const model = elementView.model;
+        if (model.get('type') && model.get('type').startsWith('custom.UMLClass')) {
+            elementView.removeTools();
+            elementView.addTools(ClassToolBox.defaultTools);
+        }
+    });    
+
+
+    paper.on('element:pointerdown', function(...args) { 
+        console.log('paper: element:pointerdown');
+    });
+
+    paper.on('blank:pointerdown', (evt, x, y) => {
+        const [element] = paper.model.findModelsFromPoint({ x, y });
+        if (element) {
+            // const elementView = paper.findViewByModel(element);
+            // do something with elementView
+            console.log('paper: blank:pointerdown: element is', element?.attributes?.type);
+        } else {
+            // User clicked on blank space on paper
+            if (ActiveTool.onPaperClick) {
+                ActiveTool.onPaperClick({ x, y });
+            }
+        }
+   });
+
+
+    paper.on('element:mouseleave', function(elementView) {
+        elementView.unhighlight();
+        const model = elementView.model;
+        if (model.get('type') && model.get('type').startsWith('custom.UMLClass')) {
+            elementView.removeTools();
+        }
+    });
+
+
+
+    function alertTest() {
+        Swal.fire({
+                title: 'Choose an option',
+                text: 'Select one of the choices below:',
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'Option 1',
+                denyButtonText: 'Option 2',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'vscode-swal-popup',
+                    header: 'vscode-swal-header',
+                    title: 'vscode-swal-title',
+                    closeButton: 'vscode-swal-close-button',
+                    icon: 'vscode-swal-icon',
+                    image: 'vscode-swal-image',
+                    content: 'vscode-swal-content',
+                    input: 'vscode-swal-input',
+                    actions: 'vscode-swal-actions',
+                    confirmButton: 'vscode-swal-confirm-button',
+                    denyButton: 'vscode-swal-deny-button',
+                    cancelButton: 'vscode-swal-cancel-button',
+                    footer: 'vscode-swal-footer',
+                },
+                // Optional: To adjust the icon color
+                didOpen: () => {
+                    const iconElement = document.querySelector('.vscode-swal-icon');
+                    if (iconElement) {
+                        iconElement.style.color = 'var(--vscode-editor-foreground)';
+                    }
+                },
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log('Option 1 selected');
+            } else if (result.isDenied) {
+                console.log('Option 2 selected');
+            } else {
+                console.log('Cancelled');
+            }
+        });        
+    }
+
+    // JSON of an individual shape instance
+//    console.log(JSON.stringify(umlClass.toJSON(), null, 2));
+
+    // JSON of entire diagram
+    // console.log(JSON.stringify(graph.toJSON(), null, 2));
+
+
+
+    // setTimeout(alertTest, 2000);
+
+    </script>
+
+    <scriptXX src="umlTestAttribEditor.js"></script>
+    
+</body>
+</html>

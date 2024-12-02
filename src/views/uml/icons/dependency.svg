@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 60" width="80" height="60">
+  <!-- Straight line -->
+  <line x1="15" y1="40" x2="55" y2="20" stroke="black" stroke-width="2"/>
+  <!-- Correctly rotated arrowhead -->
+  <polygon points="57,16 67,21 57,26" fill="black" transform="rotate(-28,55,25)"/>
+  <!-- Text for label -->
+  <text x="40" y="55" font-family="Arial" font-size="11" text-anchor="middle" fill="black">
+    Dependency
+  </text>
+</svg>

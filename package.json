@@ -1,0 +1,259 @@
+{
+  "name": "nodeUML",
+  "displayName": "nodeUML",
+  "description": "Create UML class diagrams and generate code with NodeMDA",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.94.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "umlSidebar",
+          "title": "UML Tools",
+          "icon": "media/diagram-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "umlSidebar": [
+        {
+          "id": "modelExplorer",
+          "name": "Model Explorer"
+        },
+        {
+          "id": "propertiesView",
+          "name": "Model Properties",
+          "type": "webview"
+        }
+      ]
+    },
+    "customEditors": [
+      {
+        "viewType": "nodeuml.umlDiagramEditor",
+        "displayName": "UML Diagram Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.numl"
+          }
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "nodeuml.refreshModel",
+        "title": "Refresh Model Explorer"
+      },
+      {
+        "command": "nodeuml.createUMLModel",
+        "title": "New UML Model"
+      },
+      {
+        "command": "nodeuml.addClass",
+        "title": "Class"
+      },
+      {
+        "command": "nodeuml.addPackage",
+        "title": "Package"
+      },
+      {
+        "command": "nodeuml.addAttribute",
+        "title": "Attribute"
+      },
+      {
+        "command": "nodeuml.addOperation",
+        "title": "Operation"
+      },
+      {
+        "command": "nodeuml.addParameter",
+        "title": "Parameter"
+      },
+      {
+        "command": "nodeuml.addProfile",
+        "title": "Profile"
+      },
+      {
+        "command": "nodeuml.addDataType",
+        "title": "Data type"
+      },
+      {
+        "command": "nodeuml.addTagDef",
+        "title": "Tag definition"
+      },
+      {
+        "command": "nodeuml.addStereotype",
+        "title": "Stereotype"
+      },
+      {
+        "command": "nodeuml.addActor",
+        "title": "Actor"
+      },
+      {
+        "command": "nodeuml.updateProperty",
+        "title": "Update Property"
+      },
+      {
+        "command": "nodeuml.removeNode",
+        "title": "Remove"
+      },
+      {
+        "command": "nodeuml.removeById",
+        "title": "Remove element by meta Id"
+      },
+      {
+        "command": "nodeuml.createNewMeta",
+        "title": "Create new UML element"
+      },
+      {
+        "command": "nodeuml.updateMetaProperties",
+        "title": "Updates one or more properties on a meta element"
+      }
+
+    ],
+    "keybindings": [
+      {
+        "command": "nodeuml.saveUMLModel",
+        "key": "cmd+s",
+        "when": "webviewPanel == umlDiagramEditor"
+      }
+    ],
+    "menus": {
+      "file/newFile": [
+        {
+          "command": "nodeuml.createUMLModel",
+          "group": "umlTools",
+          "when": "filesExplorerFocus",
+          "args": {
+            "uri": "${resourceUri}"
+          }
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "nodeuml.createUMLModel",
+          "group": "umlTools",
+          "when": "filesExplorerFocus",
+          "args": {
+            "uri": "${resourceUri}"
+          }
+        }
+      ],
+      "view/item/context": [
+        {
+          "submenu": "uml.addElement",
+          "group": "umlTools",
+          "view": "modelExplorer",
+          "when": "viewItem =~ /UML.*/ || viewItem == Profiles"
+        },
+        {
+          "command": "nodeuml.removeNode",
+          "label": "Remove Element",
+          "group": "umlTools",
+          "when": "view == modelExplorer && (viewItem =~ /UML.*/ || viewItem == Profiles)"
+        }
+      ],
+      "uml.addElement": [
+        {
+          "command": "nodeuml.addClass",
+          "when": "viewItem == UMLModel || viewItem == UMLPackage",
+          "group": "umlTools"
+        },
+        {
+          "command": "nodeuml.addPackage",
+          "when": "viewItem == UMLModel || viewItem == UMLPackage || viewItem == UMLProfile",
+          "group": "umlTools"
+        },
+        {
+          "command": "nodeuml.addAttribute",
+          "when": "viewItem == UMLClass",
+          "group": "umlTools"
+        },
+        {
+          "command": "nodeuml.addOperation",
+          "when": "viewItem == UMLClass",
+          "group": "umlTools"
+        },
+        {
+          "command": "nodeuml.addParameter",
+          "when": "viewItem == UMLOperation",
+          "group": "umlTools"
+        },
+        {
+          "command": "nodeuml.addProfile",
+          "when": "viewItem == Profiles",
+          "group": "umlTools"
+        },
+        {
+          "command": "nodeuml.addDataType",
+          "when": "viewItem == UMLProfile || viewItem == UMLPackage || viewItem == UMLModel",
+          "group": "umlTools"
+        },
+        {
+          "command": "nodeuml.addTagDef",
+          "when": "viewItem == UMLProfile || viewItem == UMLPackage || viewItem == UMLModel",
+          "group": "umlTools"
+        },
+        {
+          "command": "nodeuml.addStereotype",
+          "when": "viewItem == UMLProfile || viewItem == UMLPackage || viewItem == UMLModel",
+          "group": "umlTools"
+        },
+        {
+          "command": "nodeuml.addActor",
+          "when": "viewItem == UMLProfile || viewItem == UMLPackage || viewItem == UMLModel",
+          "group": "umlTools"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "uml.addElement",
+        "label": "Add Element"
+      }
+    ]
+  },
+  "files": [
+    "dist",
+    "media",
+    "src",
+    "node_modules"
+  ],
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.9",
+    "@types/node": "20.x",
+    "@types/uuid": "^10.0.0",
+    "@types/vscode": "^1.94.0",
+    "@typescript-eslint/eslint-plugin": "^8.10.0",
+    "@typescript-eslint/parser": "^8.7.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^9.13.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.6.3",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@joint/core": "^4.0.4",
+    "awesomplete": "^1.1.7",
+    "sweetalert2": "^11.14.5",
+    "uuid": "^10.0.0"
+  }
+}
