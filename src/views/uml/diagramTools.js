@@ -1,11 +1,20 @@
+import { AttributeEditor } from "./attributeEditor.js";
+import { OperationEditor } from "./operationEditor.js";
+import { CommandPalette, icons } from "./commandPalette.js";
+import { verticalPusherTool, horizontalPusherTool, createMetaShape } from "./diagramEditor.js";
+import { metaModel } from "./metaModel.js";
+import { msgClient } from "./messageBus.js";
+
 // -------------------------------------------------------------
 // Tools
 // -------------------------------------------------------------
 
+joint.shapes.custom = joint.shapes.custom || {};
+
 const COLOR_CONNECTOR = '#8ef56c';
 const COLOR_CONNECTING = '#5bb53f';
 
-const HighlightAnchorPoints = joint.dia.HighlighterView.extend({
+export const HighlightAnchorPoints = joint.dia.HighlighterView.extend({
     tagName: 'g',
     attributes: {
         stroke: '#131e29',
@@ -53,7 +62,7 @@ function confirmChoice(opts) {
     return Swal.fire(params);
 }
 
-var activeClassEditor = null;
+export var activeClassEditor = null;
 
 async function getDataTypeIdByName(name, dtCache) {
    const node = await metaModel.findDataType(name, dtCache);
@@ -87,7 +96,7 @@ async function getOperationJson(jsonOperation, classMetaId) {
 }
 
 
-class ClassToolBox {
+export class ClassToolBox {
 
     constructor() {
         this.boundaryTool = new joint.elementTools.Boundary({
@@ -325,7 +334,7 @@ class ClassToolBox {
 
 
 
-class LinkToolBox {
+export class LinkToolBox {
 
     constructor() {
         this.verticesTool = new joint.linkTools.Vertices();
@@ -379,7 +388,7 @@ class LinkToolBox {
 
 
 
-class ActorToolBox {
+export class ActorToolBox {
 
     constructor() {
         this.boundaryTool = new joint.elementTools.Boundary({
@@ -620,7 +629,7 @@ function createGeneralizationProxy() {
 }
 
 
-const ActiveTool = {
+export const ActiveTool = {
 
     // canStartLink(shapeModel, shapeClickPos)
     // Returns TRUE if a link can be started from the specified shape
@@ -673,34 +682,34 @@ const commandPalette = new CommandPalette({
     columnCount: 3,
     commands: [
         {
-            svg: svgClass,
+            svg: icons.svgClass,
             exec() {
                 ActiveTool.clear();
                 ActiveTool.onPaperClick = createNewClassOnClick();
-                commandPalette.setActiveTool(svgClass);
+                commandPalette.setActiveTool(icons.svgClass);
             },
         },
 
         {
-            svg: svgEntity,
+            svg: icons.svgEntity,
             exec() {
                 ActiveTool.clear();
                 ActiveTool.onPaperClick = createNewClassOnClick('Entity');
-                commandPalette.setActiveTool(svgEntity);
+                commandPalette.setActiveTool(icons.svgEntity);
             },
         },
 
         {
-            svg: svgService,
+            svg: icons.svgService,
             exec() {
                 ActiveTool.clear();
                 ActiveTool.onPaperClick = createNewClassOnClick('Service');
-                commandPalette.setActiveTool(svgService);
+                commandPalette.setActiveTool(icons.svgService);
             },
         },
     
         {
-            svg: svgAssociation,
+            svg: icons.svgAssociation,
             exec() {
                 ActiveTool.clear();
                 ActiveTool.canStartLink = canStartClassLink;
@@ -710,12 +719,12 @@ const commandPalette = new CommandPalette({
                 ActiveTool.useTopBottomAnchors = false;
                 ActiveTool.useCenterTopBottomAnchors = false;
                 ActiveTool.useLeftRightAnchors = true;
-                commandPalette.setActiveTool(svgAssociation);
+                commandPalette.setActiveTool(icons.svgAssociation);
             },
         },
 
         {
-            svg: svgDependency,
+            svg: icons.svgDependency,
             exec() {
                 ActiveTool.clear();
                 ActiveTool.canStartLink = canStartClassLink;
@@ -725,12 +734,12 @@ const commandPalette = new CommandPalette({
                 ActiveTool.useTopBottomAnchors = true;
                 ActiveTool.useCenterTopBottomAnchors = false;
                 ActiveTool.useLeftRightAnchors = true;                
-                commandPalette.setActiveTool(svgDependency);
+                commandPalette.setActiveTool(icons.svgDependency);
             },
         },
 
         {
-            svg: svgGeneralization,
+            svg: icons.svgGeneralization,
             exec() {
                 ActiveTool.clear();
                 ActiveTool.canStartLink = canStartGeneralization;
@@ -739,51 +748,51 @@ const commandPalette = new CommandPalette({
                 ActiveTool.useTopBottomAnchors = true;
                 ActiveTool.useCenterTopBottomAnchors = true;
                 ActiveTool.useLeftRightAnchors = false;
-                commandPalette.setActiveTool(svgGeneralization);
+                commandPalette.setActiveTool(icons.svgGeneralization);
             },
         },
 
         {
-            svg: svgActor,
+            svg: icons.svgActor,
             exec() {
                 ActiveTool.clear();
                 ActiveTool.onPaperClick = createNewActorOnClick;
-                commandPalette.setActiveTool(svgActor);
+                commandPalette.setActiveTool(icons.svgActor);
             },
         },
 
         {
-            svg: svgUser,
+            svg: icons.svgUser,
             exec() {
                 ActiveTool.clear();
                 ActiveTool.onPaperClick = addActorOnClickWithName('User');
-                commandPalette.setActiveTool(svgUser);
+                commandPalette.setActiveTool(icons.svgUser);
             },
         },
 
         {
-            svg: svgAdmin,
+            svg: icons.svgAdmin,
             exec() {
                 ActiveTool.clear();
                 ActiveTool.onPaperClick = addActorOnClickWithName('AdminRole');
-                commandPalette.setActiveTool(svgAdmin);
+                commandPalette.setActiveTool(icons.svgAdmin);
             },
         },
 
         {
-            svg: svgVerticalPush,
+            svg: icons.svgVerticalPush,
             exec() {
                 ActiveTool.clear();
-                commandPalette.setActiveTool(svgVerticalPush);
+                commandPalette.setActiveTool(icons.svgVerticalPush);
                 verticalPusherTool.activate();
             },
         },
 
         {
-            svg: svgHorizontalPush,
+            svg: icons.svgHorizontalPush,
             exec() {
                 ActiveTool.clear();
-                commandPalette.setActiveTool(svgHorizontalPush);
+                commandPalette.setActiveTool(icons.svgHorizontalPush);
                 horizontalPusherTool.activate();
             },
         },
@@ -892,4 +901,3 @@ defaults() {
 
 }
 joint.shapes.custom.UMLGeneralizationProxy = UMLGeneralizationProxy;
-

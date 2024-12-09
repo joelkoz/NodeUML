@@ -1,4 +1,6 @@
-class OperationEditor extends ClassEditorBase {
+import { ClassEditorBase } from "./attributeEditor.js";
+
+export class OperationEditor extends ClassEditorBase {
     constructor() {
       super();
     }

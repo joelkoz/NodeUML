@@ -112,8 +112,21 @@ const svgHorizontalPush = `
   </text>
 `;
 
+export const icons = { 
+  svgDependency,
+  svgAssociation,
+  svgGeneralization,
+  svgClass,
+  svgEntity,
+  svgService,
+  svgActor,
+  svgUser,
+  svgAdmin,
+  svgVerticalPush,
+  svgHorizontalPush
+};
 
-class CommandPalette {
+export class CommandPalette {
   constructor(options = {}) {
       this.commands = options.commands || [];
       this.columnCount = options.columnCount || 3;

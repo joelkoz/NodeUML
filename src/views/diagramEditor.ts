@@ -305,18 +305,10 @@ export class DiagramEditor implements vscode.CustomEditorProvider<ProjectDocumen
         const awesompleteUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'awesomplete.min.js'));
 
         const umlUri = vscode.Uri.joinPath(this.context.extensionUri, 'src/views/uml');
-        const messageBusUri = webview.asWebviewUri(vscode.Uri.joinPath(umlUri, 'messageBus.js'));
-        const diagramShapesUri = webview.asWebviewUri(vscode.Uri.joinPath(umlUri, 'diagramShapes.js'));
-        const diagramToolsUri = webview.asWebviewUri(vscode.Uri.joinPath(umlUri, 'diagramTools.js'));
         const diagramEditorUri = webview.asWebviewUri(vscode.Uri.joinPath(umlUri, 'diagramEditor.js'));
-        const jsCommandPaletteUri = webview.asWebviewUri(vscode.Uri.joinPath(umlUri, 'commandPalette.js'));
         const cssCommandPaletteUri = webview.asWebviewUri(vscode.Uri.joinPath(umlUri, 'commandPalette.css'));
         const cssSwalUri = webview.asWebviewUri(vscode.Uri.joinPath(umlUri, 'sweet.css'));
-
-        const jsAttributeEditorUri = webview.asWebviewUri(vscode.Uri.joinPath(umlUri, 'attributeEditor.js'));
         const cssAttributeEditorUri = webview.asWebviewUri(vscode.Uri.joinPath(umlUri, 'attributeEditor.css'));
-        const jsOperationEditorUri = webview.asWebviewUri(vscode.Uri.joinPath(umlUri, 'operationEditor.js'));
-        const jsPusherToolsUri = webview.asWebviewUri(vscode.Uri.joinPath(umlUri, 'pusherTools.js'));
 
         return `
         <!DOCTYPE html>
@@ -373,14 +365,9 @@ export class DiagramEditor implements vscode.CustomEditorProvider<ProjectDocumen
                 }
             </script>
             <script src="${awesompleteUri}" nonce="${nonce}"></script>
-            <script src="${jsCommandPaletteUri}" nonce="${nonce}"></script>
-            <script src="${jsAttributeEditorUri}" nonce="${nonce}"></script>           
-            <script src="${jsOperationEditorUri}" nonce="${nonce}"></script>           
-            <script src="${jsPusherToolsUri}" nonce="${nonce}"></script>           
-            <script src="${diagramShapesUri}" nonce="${nonce}"></script>        
-            <script src="${diagramToolsUri}" nonce="${nonce}"></script>        
-            <script src="${messageBusUri}" nonce="${nonce}"></script>   
-            <script src="${diagramEditorUri}" nonce="${nonce}"></script>        
+            <script type="module" nonce="${nonce}">
+                import '${diagramEditorUri}';
+            </script>
         </body>
         </html>
         `;

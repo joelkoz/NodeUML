@@ -1,4 +1,8 @@
-joint.shapes.custom = {};
+import * as umlShapes from './umlShapes.js';
+import { shapeCache } from './shapeCache.js';
+import { metaModel } from './metaModel.js';
+
+// Custom UML Class shape that links to meta model
 
 /**
 * Extends a method of a Javascript object that was not defined using ES6 class symantics.
@@ -20,545 +24,309 @@ joint.shapes.custom = {};
 * ```
 */
 function extendMethod(object, methodName, newLogic) {
-   const originalMethod = object[methodName];
-   return function(...args) {
-       const superMethod = (...superArgs) => {
-           return originalMethod.apply(this, superArgs.length ? superArgs : args);
-       };
-       return newLogic.apply(this, [superMethod, ...args]);
-   };
-}
+    const originalMethod = object[methodName];
+    return function(...args) {
+        const superMethod = (...superArgs) => {
+            return originalMethod.apply(this, superArgs.length ? superArgs : args);
+        };
+        return newLogic.apply(this, [superMethod, ...args]);
+    };
+ }
+ 
+ 
+ 
+ // A Meta element view that will refresh the element when a
+ // "meta:refresh" event is fired by the model.
+ const UMLClassView = joint.dia.ElementView.extend({
+     initialize: function(...args) {
+         joint.dia.ElementView.prototype.initialize.apply(this, args);
+         this.listenTo(this.model, 'meta:refresh', function() {
+             this.update();
+             this.resize();
+         });
+ 
+         this.on('meta:dragstart', function(payload) {
+             // console.log(`UMLClassView: meta:dragstart: ${payload.type}`);
+             this.model.trigger('meta:dragstart', payload);
+         });
+ 
+         this.on('element:mouseenter', function() {
+             // console.log('UMLClassView: element:mouseenter');
+         });
+ 
+         // Extend the default dragLinkStart method so we can send
+         // a notification to ourselves that a link creation drag
+         // is about to start.
+         this.dragLinkStart = extendMethod(this, 'dragLinkStart', function(superMethod, ...args) {
+             // console.log('UMLClassView: dragLinkStart');
+             this.trigger('meta:dragstart', { type: "UMLAssociation" });
+             superMethod();
+         });
+     }
+ });
 
 
-
-// A Meta element view that will refresh the element when a
-// "meta:refresh" event is fired by the model.
-const UMLMetaView = joint.dia.ElementView.extend({
-    initialize: function(...arguments) {
-        joint.dia.ElementView.prototype.initialize.apply(this, arguments);
-        this.listenTo(this.model, 'meta:refresh', function() {
-            this.update();
-            this.resize();
-        });
-
-        this.on('meta:dragstart', function(payload) {
-            // console.log(`UMLMetaView: meta:dragstart: ${payload.type}`);
-            this.model.trigger('meta:dragstart', payload);
-        });
-
-        this.on('element:mouseenter', function() {
-            // console.log('UMLMetaView: element:mouseenter');
-        });
-
-        // Extend the default dragLinkStart method so we can send
-        // a notification to ourselves that a link creation drag
-        // is about to start.
-        this.dragLinkStart = extendMethod(this, 'dragLinkStart', function(superMethod, ...args) {
-            // console.log('UMLMetaView: dragLinkStart');
-            this.trigger('meta:dragstart', { type: "UMLAssociation" });
-            superMethod();
-        });
-    }
-});
-
-
-function umlClass_findClosestAnchor(x, y) {
-    const relAnchors = this.getLinkAnchors();
-    const relPoint = this.getRelativePointFromAbsolute({ x, y });
-    const distances = relAnchors.map((anchor) => {
-        return g.Point(relPoint).squaredDistance(anchor);
-    });
-    const minDistance = Math.min(...distances);
-    return relAnchors[distances.indexOf(minDistance)];
-}
-
-
-class UMLClassBase extends joint.dia.Element {
-
-    constructor(attributes = {}, options = {}) {
-        super(attributes, options);
-        this.findClosestAnchor = umlClass_findClosestAnchor;
-    }
-
-    defaults() {
-        return joint.util.defaultsDeep( {
-            type: 'custom.UMLClassBase',
-            name: '',
-            packageName: '',
-            stereotypes: [],
-            attributes: [],
-            methods: [],
-            attrs: {
-                body: { magnet: false },
-                umlClassNameRect: {  'width': 'calc(w)','stroke': 'black', 'stroke-width': 2, 'fill': '#cfcd8a' },
-                umlClassAttrsRect: {  'width': 'calc(w)','stroke': 'black', 'stroke-width': 2, 'fill': '#faf9ac' },
-                umlClassMethodsRect: {  'width': 'calc(w)','stroke': 'black', 'stroke-width': 2, 'fill': '#faf9ac' },
-
-                umlClassStereoText: {
-                    'ref': 'umlClassNameRect',
-                    'ref-y': 0,
-                    'ref-x': .5,
-                    'text-anchor': 'middle',
-                    'y-alignment': 'hanging',
-                    'font-weight': 'normal',
-                    'font-style': 'italic',
-                    'fill': 'black',
-                    'font-size': 15,
-                    'font-family': 'Arial'
-                },
-                umlClassPackageText: {
-                    'ref': 'umlClassNameRect',
-                    'ref-y': 0,
-                    'ref-x': .5,
-                    'text-anchor': 'middle',
-                    'y-alignment': 'hanging',
-                    'font-weight': 'normal',
-                    'font-style': 'normal',
-                    'fill': 'black',
-                    'font-size': 14,
-                    'font-family': 'Arial'
-                },
-                umlClassNameText: {
-                    'ref': 'umlClassNameRect',
-                    'ref-y': 0,
-                    'ref-x': .5,
-                    'text-anchor': 'middle',
-                    'y-alignment': 'hanging',
-                    'font-weight': 'bold',
-                    'fill': 'black',
-                    'font-size': 18,
-                    'font-family': 'Trebuchet MS'
-                },        
-                umlClassAttrsText: {
-                    'ref': 'umlClassAttrsRect', 'ref-y': .1, 'ref-x': 5, 'y-alignment': 'hanging',
-                    'fill': 'black', 'font-size': 14, 'font-family': 'Courier New'
-                },
-                umlClassMethodsText: {
-                    'ref': 'umlClassMethodsRect', 'ref-y': .1, 'ref-x': 5, 'y-alignment': 'hanging',
-                    'fill': 'black', 'font-size': 14, 'font-family': 'Courier New'
-                }
-            }
-        }, super.defaults);
-    }
-
-    preinitialize() {
-        this.markup = [{
-            tagName: 'g',
-            children: [
-
-                {
-                tagName: 'g',
-                selector: 'body',
-                children: [
-                        {
-                        tagName: 'rect',
-                        selector: 'umlClassNameRect',
-                        className: 'uml-class-name-rect',
-                        },
-
-                        {
-                        tagName: 'rect',
-                        selector: 'umlClassAttrsRect',
-                        className: 'uml-class-attrs-rect',
-                        },
-
-                        {
-                        tagName: 'rect',
-                        selector: 'umlClassMethodsRect',
-                        className: 'uml-class-methods-rect',
-                        },
-                ]
-                },
-
-                {
-                tagName: 'text',
-                selector: 'umlClassStereoText',
-                className: 'uml-class-stereo-text',
-                groupSelector: 'texts'
-                },
-
-                {
-                tagName: 'text',
-                selector: 'umlClassPackageText',
-                className: 'uml-class-package-text',
-                groupSelector: 'texts'
-                },
-
-                {
-                tagName: 'text',
-                selector: 'umlClassNameText',
-                className: 'uml-class-name-text',
-                groupSelector: 'texts'
-                },
-
-                {
-                tagName: 'text',
-                selector: 'umlClassAttrsText',
-                className: 'uml-class-attrs-text',
-                groupSelector: 'texts'
-                },
-
-                {
-                tagName: 'text',
-                selector: 'umlClassMethodsText',
-                className: 'uml-class-methods-text',
-                groupSelector: 'texts'
-                },
-            ]
-        }];
-
-    }
-
-    initialize(...args) {
-        super.initialize(...args);
-        this.on('change:name change:packageName change:attributes change:methods change:stereotypes', function() {
-            this.updateRectangles();
-            this.trigger('meta:refresh');
-        }, this);
-
-        this.updateRectangles();
-    }
-
-    getClassName() {
-        return this.get('name');
-    }
-
-    updateRectangles() {
-
-        var attrs = this.get('attrs');
-
-        var rects = [
-            { txtName: 'Stereo', txtScale: 1.08, text: this.get('stereotypes') },
-            { txtName: 'Package', txtScale: 1.0, text: this.get('packageName') },
-            { txtName: 'Name', txtScale: 1.15, text: this.getClassName() },
-            { txtName: 'Attrs', txtScale: 1.0, text: this.get('attributes') },
-            { txtName: 'Methods', txtScale: 1.0, text: this.get('methods') }
-        ];
-
-        var offsetY = 0;
-        var maxLength = 0;
-        var refY = 0;
-        rects.forEach(function(rect, ndx) {
-
-            // Calculate the width and height of the text lines
-            var lines = Array.isArray(rect.text) ? rect.text : [rect.text];
-            var rectHeight = lines.length * 18 * rect.txtScale;
-            maxLength = Math.max(maxLength,...lines.map(str => str.length));
-
-            // Set the text lines for this section
-            attrs['umlClass' + rect.txtName + 'Text'].text = lines.join('\n');
-
-            if (ndx >= 3) {
-               // attrs and methods get their own box - set the height and translate
-               attrs['umlClass' + rect.txtName + 'Rect'].height = rectHeight;
-               attrs['umlClass' + rect.txtName + 'Rect'].transform = 'translate(0,' + offsetY + ')';
-            }
-            else {
-                attrs['umlClass' + rect.txtName + 'Text']['ref-y'] = refY;
-                refY += (lines.length * 18 * rect.txtScale);
-                if (ndx === 2) {
-                    // stereo, package, and name all share the top box. Set the cumulative height
-                    rectHeight += 5;
-                    attrs['umlClass' + rect.txtName + 'Rect'].height = offsetY+rectHeight;
-                }
-            }
-            offsetY += rectHeight;
-        });
-
-        // Now, resize the entire box
-        this.resize(maxLength * 8.5 + 5, offsetY);
-    }
-
-    getLinkAnchors() {
-            const { width, height } = this.size();
-            const anchors = [];
-
-            if (ActiveTool?.useTopBottomAnchors) {
-                for (let x = 20; x < width; x += 20) {
-                    anchors.push({ x, y: 0 });
-                    anchors.push({ x, y: height });
-                }
-            }
-
-            if (ActiveTool?.useLeftRightAnchors) {
-                for (let y = 20; y < height; y += 20) {
-                    anchors.push({ x: 0, y });
-                    anchors.push({ x: width, y });
-                }
-            }
-
-            if (ActiveTool?.useCenterTopBottomAnchors) {
-                anchors.push({ x: width / 2, y: 0 });
-                anchors.push({ x: width / 2, y: height });
-            }
-            return anchors;
-    }    
-
-}
-joint.shapes.custom.UMLClassBase = UMLClassBase;
-joint.shapes.custom.UMLClassBaseView = UMLMetaView;
-
-
-
-class UMLActorBase extends joint.dia.Element {
+export class UMLClass extends umlShapes.UMLClassBase {
 
     constructor(attributes = {}, options = {}) {
         super(attributes, options);
     }
-
+ 
     defaults() {
         return joint.util.defaultsDeep( {
-            type: 'custom.UMLActorBase',
-            size: {
-                width: 35,
-                height: 60
-            },
-            name: '',
-            attrs: {
-                background: {
-                    width: "calc(w)",
-                    height: "calc(h)",
-                    fill: "transparent"
-                },
-                body: {
-                    d: `M 0 calc(0.4 * h) h calc(w) M 0 calc(h) calc(0.5 * w) calc(0.7 * h) calc(w) calc(h) M calc(0.5 * w) calc(0.7 * h) V calc(0.3 * h)`,
-                    fill: "none",
-                    stroke: 'black',
-                    strokeWidth: 2
-                },
-                head: {
-                    cx: "calc(0.5 * w)",
-                    cy: `calc(0.15 * h)`,
-                    r: `calc(0.15 * h)`,
-                    stroke: 'black',
-                    strokeWidth: 2,
-                    fill: "#ffffff"
-                },
-                label: {
-                    y: "calc(h + 10)",
-                    x: "calc(0.5 * w)",
-                    textAnchor: "middle",
-                    textVerticalAnchor: "top",
-                    fontSize: 14,
-                    fontFamily: "sans-serif",
-                    fill: 'black',
-                    textWrap: {
-                        width: "calc(3 * w)",
-                        height: null
-                    }
-                }
-            }
-        }, super.defaults);
+            type: 'custom.UMLClass',
+            metaId: '',
+        }, super.defaults());
     }
-
-    preinitialize() {
-        this.markup =joint.util.svg`
-            <rect @selector="background" />
-            <path @selector="body" />
-            <circle @selector="head" />
-            <text @selector="label" />
-        `;
+ 
+    async metaToProps(classNode) {
+       if (!classNode) {
+         classNode = await metaModel.getClassNode(this.attributes.metaId);
+       }
+       if (classNode?._type === 'UMLClass') {
+          this.stereoToProps(classNode);
+          this.nameToProps(classNode);
+          this.childrenToProps(classNode);
+       }
+       else {
+          this.set('name', "no-name");
+          this.set('packageName', "");
+          this.set('stereotypes', []);
+          this.set('attributes', []);
+          this.set('methods', []);
+       }
     }
-
-    initialize(...args)  {
-        super.initialize(...args);
-        this.on('change:name', function() {
-            this.updateLabels();
-            this.trigger('meta:refresh');            
-        }, this);
-
-        this.updateLabels();
+  
+    nameToProps(classNode) {
+      this.set('name', classNode.name);
+      const packageName = classNode.packageName || '(root)';    
+      this.prop('packageName', packageName);
     }
-
-    updateLabels() {
-        this.attr('label/text', this.get('name'));
+  
+    stereoToProps(classNode) {
+       const stereo = [];
+       classNode.stereotypes.forEach((stereotype) => {
+          stereo.push(`<<${stereotype.name}>>`);
+       });
+       this.set('stereotypes', stereo);
     }
-}
-joint.shapes.custom.UMLActorBase = UMLActorBase;
-joint.shapes.custom.UMLActorBaseView = UMLMetaView;
-
-
-
-class UMLLinkBase extends joint.shapes.standard.Link {
-
+  
+    childrenToProps(classNode) {
+       const attribs = [];
+       const methods = [];
+       if (classNode?.ownedElements) {
+          classNode.ownedElements.forEach((element) => {
+             if (element._type === 'UMLAttribute') {
+                 const attrib = element;
+                 const viz = attrib?.visibility === 'private' ? '-' : attrib?.visibility === 'protected' ? '#' : '+';
+                 const strAttrib = 
+                    `${viz}${attrib?.name}: ${attrib?.type?.name || ''} ${attrib?.multiplicity !== '0..1' ? '['+attrib?.multiplicity+']' : ''}`;
+                 attribs.push(strAttrib);
+             }
+             else if (element._type === 'UMLOperation') {
+                 const method = element;
+                 const viz = method?.visibility === 'private' ? '-' : method?.visibility === 'protected' ? '#' : '+';
+                 const strMethod =
+                    `${viz}${method?.name}(${method.ownedElements.map(param => param.name).join(',')})${method?.returnType ? ': ' + method.returnType?.name : ''}`;
+                 methods.push(strMethod);
+             }
+          });
+       }
+  
+       if (attribs.length === 0) {
+          // Reserve display space for future attributes
+          attribs.push('');
+       }
+       if (methods.length === 0) {
+          // Reserve display space for future methods
+          methods.push('');
+       }
+  
+       this.set('attributes', attribs);
+       this.set('methods', methods);
+    }
+ }
+ joint.shapes.custom.UMLClass = UMLClass;
+ joint.shapes.custom.UMLClassView = UMLClassView;
+ 
+ 
+ 
+ export class UMLActor extends umlShapes.UMLActorBase {
+ 
     constructor(attributes = {}, options = {}) {
         super(attributes, options);
     }
-
+ 
     defaults() {
         return joint.util.defaultsDeep( {
-            type: 'custom.UMLLinkBase',
-            metaId: '', 
-            labels: [],
-            sourceEnd: {
-                metaId: '',
-                name: '',
-                multiplicity: '',
-                navigable: true,
-            },
-            targetEnd: {
-                metaId: '',
-                name: '',
-                multiplicity: '',
-                navigable: true,
-            },
-            attrs: {
-                'line': {
-                    sourceMarker: {
-                        d: ''
-                    },
-                    targetMarker: {
-                        d: ''
-                    }
-                }
-            },
-            router: {
-                name: 'rightAngle',
-                margin: 40
-            },
-            connector: { name: 'jumpover' }            
-        }, super.defaults);
+            type: 'custom.UMLActor',
+            metaId: '',
+        }, super.defaults());
     }
-
-    initialize(...args) {
-        super.initialize(...args);
-        this.on('change:sourceEnd change:targetEnd change:labels', function() {
-            console.log('UMLLinkBase: change detected');
-            this.updateLabels();
-            const myView = paper.findViewByModel(this);
-            if (myView) {
-                myView.update();
-            }
-        }, this);
-
-        this.updateLabels();
+ 
+    async metaToProps(actorNode) {
+       if (!actorNode) {
+          actorNode = await metaModel.findId(this.metaId);
+       }
+       if (actorNode?._type === 'UMLActor') {
+           this.set('name', actorNode.name);
+       }
+       else {
+          this.set('name', '');
+       }
     }
-
-
+ 
+ }
+ joint.shapes.custom.UMLActor = UMLActor;
+ 
+ 
+ export class UMLLink extends umlShapes.UMLLinkBase {
+ 
+    constructor(attributes = {}, options = {}) {
+        super(attributes, options);
+    }
+ 
+ 
+    defaults() {
+        return joint.util.defaultsDeep( {
+            type: 'custom.UMLLink',
+            metaId: '',
+        }, super.defaults());
+    }
+ 
+ 
     resolveShapeId(metaId) {
-        return null;
-    }
-
-    updateLabels() {
-       const labels = [];
-       const sourceEnd = this.get('sourceEnd');
-
-       if (sourceEnd && sourceEnd.metaId) {
-           const shapeId = this.resolveShapeId(sourceEnd.metaId);
-           if (shapeId) {
-               this.prop('source', { id: shapeId });
-               if (sourceEnd.name) {
-                   labels.push({
-                        'attrs': {
-                            'text': {
-                                'text': sourceEnd.name,
-                                'text-anchor': 'start',
-                                'fill': 'black',
-                                'font-size': 14, 
-                                'font-family': 'Courier New'
-                            },
-                            'rect': {
-                                'stroke': 'black',
-                                'fill': 'none',
-                                'strokeWidth': 0
-                            }
-                        },
-                        'position': {
-                            'distance': 5, 
-                            '_offset': { x: 10, y: -10 },
-                            'offset': -12,
-                            'args': { 'keepGradient': true }
-                        }
-                   });
-               }
-               if (sourceEnd.multiplicity) {
-                   labels.push({
-                        'attrs': {
-                            'text': {
-                                'text': sourceEnd.multiplicity,
-                                'text-anchor': 'start',
-                                'fill': 'black',
-                                'font-size': 14, 
-                                'font-family': 'Courier New'
-                            },
-                            'rect': {
-                                'stroke': 'black',
-                                'fill': 'none',
-                                'strokeWidth': 0
-                            }
-                        },
-                        'position': {
-                            'distance': 5, 
-                            'offset': 12,
-                            'args': { 'keepGradient': true }
-
-                        }
-                   });
-               }
-           }
+       let shapeIds = shapeCache.getShapeIds(metaId);
+       if (shapeIds.length > 0) {
+           return shapeIds[0];
        }
-
-       const targetEnd = this.get('targetEnd');
-
-       if (targetEnd && targetEnd.metaId) {
-           const shapeId = this.resolveShapeId(targetEnd.metaId);
-           if (shapeId) {
-               this.prop('target', { id: shapeId });
-               if (targetEnd.name) {
-                   labels.push({
-                        'attrs': {
-                            'text': {
-                                'text': targetEnd.name,
-                                'text-anchor': 'end',
-                                'fill': 'black',
-                                'font-size': 14, 
-                                'font-family': 'Courier New'
-                            },
-                            'rect': {
-                                'stroke': 'black',
-                                'fill': 'none',
-                                'strokeWidth': 0
-                            }
-                        },
-                        'position': {
-                            'distance': -5, 
-                            '_offset': { x: -10, y: -10 } ,
-                            'offset': -12,
-                            'args': { 'keepGradient': true }
-                        }
-                   });
-               }
-               if (targetEnd.multiplicity) {
-                   labels.push({
-                        'attrs': {
-                            'text': {
-                                'text': targetEnd.multiplicity,
-                                'text-anchor': 'end',
-                                'fill': 'black',
-                                'font-size': 14, 
-                                'font-family': 'Courier New'
-                            },
-                            'rect': {
-                                'stroke': 'black',
-                                'fill': 'none',
-                                'strokeWidth': 0
-                            }
-                        },
-                        'position': {
-                            'distance': -5, 
-                            'offset': { x: -10, y: 15 },
-                            '_offset': 12,
-                            'args': { 'keepGradient': true }
-                        }
-                   });
-               }
-           }
-       }
-
-       this.set('labels', labels);
     }
-
-}
-joint.shapes.custom.UMLLinkBase = UMLLinkBase;
-joint.shapes.custom.UMLLinkBaseView = UMLMetaView;
-
+ 
+ 
+    async metaToProps(linkNode) {
+       if (!linkNode) {
+          linkNode = await metaModel.findId(this.metaId);
+       }
+       if (linkNode) {
+          if (linkNode.end1) {
+              this.prop('sourceEnd/metaId', linkNode.end1.node.$ref);
+              this.prop('sourceEnd/name', linkNode.end1.name);
+              this.prop('sourceEnd/multiplicity', linkNode.end1.multiplicity);
+          }
+          else {
+             this.prop('sourceEnd/metaId', '');
+             this.prop('sourceEnd/name', '');
+             this.prop('sourceEnd/multiplicity', '');
+          }
+ 
+          if (linkNode.end2) {
+             this.prop('targetEnd/metaId', linkNode.end2.node.$ref);
+             this.prop('targetEnd/name', linkNode.end2.name);
+             this.prop('targetEnd/multiplicity', linkNode.end2.multiplicity);
+         }
+         else {
+             this.prop('targetEnd/metaId', '');
+             this.prop('targetEnd/name', '');
+             this.prop('targetEnd/multiplicity', '');
+         }
+       }
+    }
+ }
+ 
+ joint.shapes.custom.UMLLink = UMLLink;
+ 
+ 
+ export class UMLAssociation extends UMLLink { 
+ 
+    constructor(attributes = {}, options = {}) {
+       super(attributes, options);
+    }
+ 
+ 
+    defaults() {
+       return joint.util.defaultsDeep( {
+          type: 'custom.UMLAssociation'
+       }, super.defaults());
+    }
+ 
+ 
+    async metaToProps(linkNode) {
+       super.metaToProps(linkNode);
+       if (linkNode.end1.navigable !== linkNode.end2.navigable) {
+ 
+          if (linkNode.end1.navigable) {
+             this.prop('attrs/line/sourceMarker/d', 'M 10 -5 0 0 10 5');
+             this.prop('attrs/line/sourceMarker/stroke-width', '1');
+             this.prop('attrs/line/sourceMarker/fill', 'none');
+             this.prop('attrs/line/targetMarker/d', '');
+          }
+          else {
+             this.prop('attrs/line/sourceMarker/d', '');
+             this.prop('attrs/line/targetMarker/d', 'M 10 -5 0 0 10 5');
+             this.prop('attrs/line/targetMarker/fill', 'none');
+             this.prop('attrs/line/targetMarker/stroke-width', '1');
+          }
+       }
+       else {
+          this.prop('attrs/line/sourceMarker/d', '');
+          this.prop('attrs/line/targetMarker/d', '');
+       }
+    }
+ 
+ }
+ joint.shapes.custom.UMLAssociation = UMLAssociation;
+ 
+ 
+ export class UMLDependency extends UMLLink { 
+ 
+    constructor(attributes = {}, options = {}) {
+          super(attributes, options);
+       }
+ 
+       defaults() {
+          return joint.util.defaultsDeep( {
+             type: 'custom.UMLDependency',
+             attrs: {
+                   line: {
+                      targetMarker: {
+                         'type': 'path',
+                         'd': 'M 10 -5 0 0 10 5 z'
+                      }            
+                   }
+             },
+             router: {
+                   name: 'normal'
+             }                        
+          }, super.defaults());
+       }
+ }
+ joint.shapes.custom.UMLDependency = UMLDependency;
+ 
+ 
+ export class UMLGeneralization extends UMLLink { 
+ 
+    constructor(attributes = {}, options = {}) {
+          super(attributes, options);
+       }
+ 
+       defaults() {
+          return joint.util.defaultsDeep( {
+             type: 'custom.UMLGeneralization',
+             attrs: {
+                   line: {
+                      targetMarker: {
+                         'type': 'path',
+                         'd': 'M 10 -8 L 0 0 L 10 8 z',
+                         'fill': 'white',
+                         'stroke-width': 1
+                     },           
+                   }
+             },
+             router: {
+                   name: 'normal'
+             }                        
+          }, super.defaults());
+       }
+ }
+ joint.shapes.custom.UMLGeneralization = UMLGeneralization;
+ 

@@ -1,4 +1,6 @@
-class VerticalPusherTool {
+import { ActiveTool } from "./diagramTools.js";
+
+export class VerticalPusherTool {
     constructor(paper, graph) {
         this.paper = paper;
         this.graph = graph;
@@ -265,7 +267,7 @@ class VerticalPusherTool {
 }
 
 
-class HorizontalPusherTool {
+export class HorizontalPusherTool {
     constructor(paper, graph) {
         this.paper = paper;
         this.graph = graph;

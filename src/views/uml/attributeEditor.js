@@ -1,4 +1,6 @@
-class ClassEditorBase {
+import { metaModel } from "./metaModel.js";
+
+export class ClassEditorBase {
     constructor() {
       this.jsonClass = null;
       this.items = [];
@@ -473,7 +475,7 @@ class ClassEditorBase {
 
 
   
-  class AttributeEditor extends ClassEditorBase {
+  export class AttributeEditor extends ClassEditorBase {
     constructor() {
       super();
     }

@@ -1,7 +1,10 @@
 /**
  * Handles communication between the VS Code extension and the webview.
  */
-class VSCMessageClient {
+
+import { graph } from './diagramEditor.js';
+
+export class VSCMessageClient {
     constructor(vscode) {
         this.vscode = vscode; // Save vscode reference
         this.listeners = [];
@@ -60,7 +63,7 @@ class VSCMessageClient {
  * A class for handling RPC calls from the extension code into this webview
  * This hosts the implementations of the RPC.
  */
-class RPCServer {
+export class RPCServer {
     constructor(vscode) {
         this.vscMessageClient = new VSCMessageClient(vscode);
 
@@ -92,7 +95,7 @@ class RPCServer {
 /**
  * A class for handling RPC calls from this webview into the extension code
  */
-class RPCClient {
+export class RPCClient {
     constructor(vscode) {
         this.rpcCallbacks = new Map();
         this.vscMessageClient = new VSCMessageClient(vscode);
@@ -124,11 +127,11 @@ class RPCClient {
 }
 
 
-const vscode = acquireVsCodeApi();
-const msgClient = new VSCMessageClient(vscode);
-const rpcClient = new RPCClient(vscode);
+export const vscode = acquireVsCodeApi();
+export const msgClient = new VSCMessageClient(vscode);
+export const rpcClient = new RPCClient(vscode);
 
-class RPCServerDiagramPanel extends RPCServer {
+export class RPCServerDiagramPanel extends RPCServer {
     constructor(vscode) {
        super(vscode);
     }
@@ -137,5 +140,5 @@ class RPCServerDiagramPanel extends RPCServer {
         return graph.toJSON();
     }
  }
- const rpcServer = new RPCServerDiagramPanel(vscode);
+ export const rpcServer = new RPCServerDiagramPanel(vscode);
  
