@@ -125,21 +125,6 @@ export class DiagramEditor {
             console.log('DiagramEditor: panel sent cmdAddUndoRedo');
             this._projectDocument.exec(new cmd.DiagramUndoRedo(this, payload));
         });
-
-        this.wvpMsgClient!.subscribe('onUndoKey', () => {
-            console.log('DiagramEditor: panel sent onUndoKey');
-            // VSCode already seems to handle the undo key, so don't
-            // call this._projectDocument.undo() or we'll get a 
-            // double undo
-            // this._projectDocument.undo();
-        });
-
-
-        this.wvpMsgClient!.subscribe('onRedoKey', () => {
-            console.log('DiagramEditor: panel sent onRedoKey');
-            this._projectDocument.redo();
-        });
-
     }
 
     public diagramUndo(payload: PLWVUndoRedo): void {

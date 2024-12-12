@@ -596,20 +596,5 @@ paper.on('cell:pointerup', (cellView) => {
 });
 
 
-document.addEventListener('keydown', (event) => {
-  if ((event.metaKey && event.key === 'z') || // Cmd+Z on Mac
-      (event.ctrlKey && event.key === 'z')) { // Ctrl+Z on Windows/Linux
-      if (event.shiftKey) {
-          event.preventDefault();
-          msgClient.publish('onRedoKey', {});         
-      }
-      else {
-          event.preventDefault();
-          msgClient.publish('onUndoKey', {});
-      }
-  } 
-});
-
-
 // Tell the extension we are ready to go!
 msgClient.publish('onDiagramEditorReady', true);

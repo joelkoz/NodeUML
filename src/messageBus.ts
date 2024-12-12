@@ -110,8 +110,6 @@ interface IWebviewMessages extends ICommonMessages {
    "cmdAddUndoRedo": PLWVUndoRedo;
    "onUndo": PLWVUndoRedo;
    "onRedo": PLWVUndoRedo;
-   "onUndoKey": void;
-   "onRedoKey": void;
 }
 
 

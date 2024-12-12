@@ -95,13 +95,11 @@ export class ProjectDocument implements vscode.CustomDocument {
 
     public undo(): void {
         this.commandManager!.undo();
-        this._diagramEditorProvider.notifyDocumentEditEvent(this);
     }
 
 
     public redo(): void {
         this.commandManager!.redo();
-        this._diagramEditorProvider.notifyDocumentEditEvent(this);
     }
 
 
