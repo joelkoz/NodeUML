@@ -237,7 +237,6 @@ export class ProjectNode extends AbstractNode {
     profiles: ProfileRootNode;
     refCache: ReferenceCache;
     documentUri: vscode.Uri | null;
-    isDirty: boolean;
     
     constructor(name: string) {
         super(name, 'Project');
@@ -247,12 +246,10 @@ export class ProjectNode extends AbstractNode {
         this.profiles._parent = this;
         this.refCache = new ReferenceCache();
         this.documentUri = null;
-        this.isDirty = false;
     }
 
     metaNodeAdded(element: MetaElementNode) {
         this.refCache.save(element);
-        this.isDirty = true;
     }
 
     findById(id: string): AbstractNode | undefined {

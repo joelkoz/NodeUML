@@ -1,4 +1,4 @@
-import { ActiveTool, ClassToolBox, LinkToolBox, ActorToolBox, HighlightAnchorPoints, activeClassEditor } from './diagramTools.js';
+import { ActiveTool, ClassToolBox, LinkToolBox, ActorToolBox, HighlightAnchorPoints, activeClassEditor, UndoFunctions, ShapeMoveUndo } from './diagramTools.js';
 import { msgClient, rpcClient } from './messageBus.js';
 import { VerticalPusherTool, HorizontalPusherTool } from './pusherTools.js';
 import { shapeCache } from './shapeCache.js';
@@ -140,14 +140,28 @@ export const paper = new joint.dia.Paper({
 
 
 export const verticalPusherTool = new VerticalPusherTool(paper, graph);
-verticalPusherTool.onShapesMoved = function() {
-   msgClient.publish('diagramDirty', { });
+verticalPusherTool.onMoveStarted = function() {
+    this.undoMove = new ShapeMoveUndo(this.selectedShapes);
+};
+
+verticalPusherTool.onMoveCompleted = function() {
+   if (this.undoMove) {
+       this.undoMove.moveCompleted();
+       this.undoMove = null;
+   }
 };
 
 
 export const horizontalPusherTool = new HorizontalPusherTool(paper, graph);
-horizontalPusherTool.onShapesMoved = function() {
-   msgClient.publish('diagramDirty', { });
+horizontalPusherTool.onMoveStarted = function() {
+    this.undoMove = new ShapeMoveUndo(this.selectedShapes);
+};
+
+horizontalPusherTool.onMoveCompleted = function() {
+    if (this.undoMove) {
+        this.undoMove.moveCompleted();
+        this.undoMove = null;
+    }
 };
 
 
@@ -246,7 +260,7 @@ paper.on('blank:pointerdown', (evt, x, y) => {
 
 
 // Respond to async request to restore diagram data
-msgClient.subscribe('restoreDiagram', (json) => {
+msgClient.subscribe('cmdRestoreDiagram', (json) => {
    console.log('Restoring diagram...');
    graph.fromJSON(json);
 
@@ -508,16 +522,16 @@ export function createMetaShape(jsonMeta, opts) {
         if (shape) {
            shapeCache.associate(jsonMeta._id, shape.id);
            graph.addCell(shape);
-           msgClient.publish('diagramDirty', { cellId: shape.id });
+           msgClient.publish('onDiagramDirty', { cellId: shape.id });
         }
    } 
 }
 
 
 // Respond to new meta nodes being created
-msgClient.subscribe('createMeta', (payload) => {
+msgClient.subscribe('onCreateMeta', (payload) => {
    const { jsonMeta, opts } = payload;
-   console.log(`createMeta: ${JSON.stringify(jsonMeta, null, 2)}\n opts: ${JSON.stringify(opts, null, 2)}`);
+   console.log(`onCreateMeta: ${JSON.stringify(jsonMeta, null, 2)}\n opts: ${JSON.stringify(opts, null, 2)}`);
    createMetaShape(jsonMeta, opts);
 });
 
@@ -526,36 +540,61 @@ function updateMetaShape(jsonMeta, opts) {
    const factory = shapeFactory.get(jsonMeta._type);
    if (factory?.update) {
       factory.update(jsonMeta, opts);
-      msgClient.publish('diagramDirty', { });
+      msgClient.publish('onDiagramDirty', { });
    }
  }
 
 // Respond to meta nodes being updated
-msgClient.subscribe('updateMeta', (payload) => {
+msgClient.subscribe('onUpdateMeta', (payload) => {
   const { jsonMeta, opts } = payload;
-  console.log(`updateMeta: ${jsonMeta.name} (${jsonMeta._id})`, JSON.stringify(jsonMeta, null, 2));
+  console.log(`onUpdateMeta: ${jsonMeta.name} (${jsonMeta._id})`, JSON.stringify(jsonMeta, null, 2));
   updateMetaShape(jsonMeta, opts);
 });
 
 
-msgClient.subscribe('removeMeta', (metaId) => {
-   console.log(`removeMeta: ${metaId}`);
+msgClient.subscribe('onRemoveMeta', (metaId) => {
+   console.log(`onRemoveMeta: ${metaId}`);
    const shapeIds = shapeCache.getShapeIds(metaId);
    shapeIds.forEach((shapeId) => {
       const shape = graph.getCell(shapeId);
       if (shape) {
          shape.remove();
          shapeCache.removeShapeId(shapeId);
-         msgClient.publish('diagramDirty', { });
+         msgClient.publish('onDiagramDirty', { });
       }
    });
 }); 
 
 
-
-paper.on('cell:pointerup', (cellView) => {
-    msgClient.publish('diagramDirty', { cellId: cellView.id });
+msgClient.subscribe('onUndo', (payload) => {
+    const fn = UndoFunctions['undo_' + payload.op];
+    if (fn) {
+        fn(paper, graph, payload.opts);
+    }
 });
 
+
+msgClient.subscribe('onRedo', (payload) => {
+    const fn = UndoFunctions['redo_' + payload.op];
+    if (fn) {
+        fn(paper, graph, payload.opts);
+    }
+});
+
+
+let cellMoveUndo = null;
+paper.on('cell:pointerdown', (cellView) => {
+    cellMoveUndo = new ShapeMoveUndo([cellView.model]);
+});
+
+
+paper.on('cell:pointerup', (cellView) => {
+    if (cellMoveUndo) {
+        cellMoveUndo.moveCompleted();
+        cellMoveUndo = null;
+    }
+});
+
+
 // Tell the extension we are ready to go!
-msgClient.publish('diagramEditorReady', true);
+msgClient.publish('onDiagramEditorReady', true);
