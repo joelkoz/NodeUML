@@ -2,15 +2,7 @@ import * as vscode from 'vscode';
 import * as meta from '../metaModel';
 import { MessageClient } from '../messageBus';
 import { openProjects } from '../projectDocument';
-import * as utils from "../utils";
-
-class TouchedNodes extends Set<meta.MetaElementNode> {
-    addIfMeta(node: any) {
-      if (node instanceof meta.MetaElementNode) {
-        this.add(node);
-      }
-    }
-}
+import { BatchCommand, ChangeParent } from '../commands/commands';
 
 export class ModelTreeProvider implements vscode.TreeDataProvider<meta.AbstractNode>, vscode.TreeDragAndDropController<meta.AbstractNode> {
     private _onDidChangeTreeData: vscode.EventEmitter<meta.AbstractNode | undefined | void> = new vscode.EventEmitter<meta.AbstractNode | undefined | void>();
@@ -66,15 +58,6 @@ export class ModelTreeProvider implements vscode.TreeDataProvider<meta.AbstractN
         
     }
 
-    updateProperty(field: string, value: any) {
-        if (this.selectedNode) {
-            utils.assignProperty(this.selectedNode, field, value);
-            this.refresh(this.selectedNode);
-            if (this.selectedNode instanceof meta.MetaElementNode) {
-                this.msgClient.publish('updateMetaProp', { projectId: this.project!._id, element: this.selectedNode, propName: field, value });
-            }
-        }
-    }
 
     handleDrag(sourceNodes: meta.AbstractNode[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void {
         const metaElementNodes = sourceNodes.filter(node => node instanceof meta.MetaElementNode);
@@ -106,7 +89,7 @@ export class ModelTreeProvider implements vscode.TreeDataProvider<meta.AbstractN
         const targetParent = target._parent instanceof meta.AbstractNode ? target._parent : undefined;
         const parentAllowableChildren = targetParent?.allowableChildren();
 
-        const touchedNodes = new TouchedNodes();
+        const cmdDrop = new BatchCommand("drop");
 
         for (const node of sourceNodes) {
             if (node && node._parent instanceof meta.AbstractNode) {
@@ -115,33 +98,22 @@ export class ModelTreeProvider implements vscode.TreeDataProvider<meta.AbstractN
                 const isAllowed = allowableChildren.some((allowedClass) => node instanceof allowedClass);
                 if (isAllowed) {
                     const oldParent = node._parent;
-                    oldParent.removeChild(node);
-                    target.insertFirst(node);
-                    touchedNodes.addIfMeta(node);
-                    touchedNodes.addIfMeta(oldParent);
-                    touchedNodes.addIfMeta(target);
+                    cmdDrop.add(new ChangeParent(node._id, oldParent._id, target._id));
                 }
                 else if (targetParent) {
                     // As a catch all, maybe the parent node of the target accepts this node as a child
                     const isAllowedOnAlternate = parentAllowableChildren!.some((allowedClass) => node instanceof allowedClass);
                     if (isAllowedOnAlternate) {
                         const oldParent = node._parent;
-                        oldParent.removeChild(node);
-                        targetParent.insertBefore(node, target);
-                        touchedNodes.addIfMeta(node);
-                        touchedNodes.addIfMeta(oldParent);
-                        touchedNodes.addIfMeta(targetParent);
+                        cmdDrop.add(new ChangeParent(node._id, oldParent._id, targetParent._id, target._id));
                     }
                 }
             }
         }
-    
-       this.refresh();
 
-       // Now - tell the system of the nodes who have changed...
-       for (const touchedNode of touchedNodes) {
-            this.msgClient.publish('updateMeta', { projectId: this.project!._id, element: touchedNode, opts: {} });
-       }
+        openProjects.currentProjectDoc!.exec(cmdDrop);
+
+        this.refresh();
     }
 
     refresh(element?: meta.AbstractNode): void {

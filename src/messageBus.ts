@@ -38,25 +38,15 @@ interface ICommonMessages {
 }
 
 
-export interface PLUpdateMetaProperty {
-    projectId: string;
-    element: MetaElementNode;
-    propName: string;
-    value: any;
-};
-
-
 /**
  * A map of message names and payload types that can be sent only
  * to other extension code
  */
 interface IExtensionMessages extends ICommonMessages {
-    "removeMeta": PLMetaModelChange;
-    "updateMetaProp": PLUpdateMetaProperty;
-    "createMeta": PLMetaModelChange;
-    "updateMeta": PLMetaModelChange;
+    "onRemoveMeta": PLMetaModelChange;
+    "onCreateMeta": PLMetaModelChange;
+    "onUpdateMeta": PLMetaModelChange;
 }
-
 
 
 export interface PLWVDiagramDirty {
@@ -96,20 +86,32 @@ export interface PLWVMetaModelChange {
 }
 
 
+export interface PLWVUndoRedo {
+    label: string;
+    op: string,
+    opts: any;
+}
+
+
 /**
  * A map of message names and payload types that can be sent only
  * to the diagram editor Webview Panel
  */
 interface IWebviewMessages extends ICommonMessages {   
-   "diagramEditorReady": Boolean; 
-   "diagramDirty": PLWVDiagramDirty;
-   "restoreDiagram": any;
-   "createNewMeta": PLCreateNewMeta;
-   "updateMetaProperties": PLUpdateMetaProperties;
-   "createMeta": PLWVMetaModelChange;
-   "updateMeta": PLWVMetaModelChange;
-   "removeMeta": string;
-   "removeRequest": string;
+   "onDiagramEditorReady": Boolean; 
+   "onDiagramDirty": PLWVDiagramDirty;
+   "cmdRestoreDiagram": any;
+   "cmdCreateNewMeta": PLCreateNewMeta;
+   "cmdUpdateMetaProperties": PLUpdateMetaProperties;
+   "onCreateMeta": PLWVMetaModelChange;
+   "onUpdateMeta": PLWVMetaModelChange;
+   "onRemoveMeta": string;
+   "cmdRemoveMeta": string;
+   "cmdAddUndoRedo": PLWVUndoRedo;
+   "onUndo": PLWVUndoRedo;
+   "onRedo": PLWVUndoRedo;
+   "onUndoKey": void;
+   "onRedoKey": void;
 }
 
 
@@ -135,7 +137,7 @@ type TWebviewMessage = {
 }[keyof IWebviewMessages];
 
 
-// And EventEmitter used to communicate between extension code
+// An EventEmitter used to communicate between extension code
 // modules
 const messageBus = new vscode.EventEmitter<TExtensionMessage>();
 

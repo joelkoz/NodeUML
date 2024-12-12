@@ -118,6 +118,7 @@ export class VerticalPusherTool {
                     this.direction = deltaY > 0 ? 'down' : 'up';
                     this.selectShapes();
                     this.initializeLineTrackY();
+                    this.onMoveStarted();
                 }
             } else {
                 // Move shapes if necessary based on direction
@@ -169,7 +170,11 @@ export class VerticalPusherTool {
 
     onMouseUp(event) {
         this.isMouseDown = false;
+        if (this.direction) {
+            this.onMoveCompleted(); 
+        }
         this.deactivate(); // By default, restart is true
+
     }
 
     onKeyDown(event) {
@@ -254,10 +259,14 @@ export class VerticalPusherTool {
             const position = cell.position();
             cell.position(position.x, position.y + deltaY);
         });
-        this.onShapesMoved();
     }
 
-    onShapesMoved() {
+
+    onMoveStarted() {
+    }
+
+
+    onMoveCompleted() {
     }
 
 
@@ -385,6 +394,7 @@ export class HorizontalPusherTool {
                     this.direction = deltaX > 0 ? 'right' : 'left';
                     this.selectShapes();
                     this.initializeLineTrackX();
+                    this.onMoveStarted();
                 }
             } else {
                 // Move shapes if necessary based on direction
@@ -437,6 +447,9 @@ export class HorizontalPusherTool {
 
     onMouseUp(event) {
         this.isMouseDown = false;
+        if (this.direction) {
+            this.onMoveCompleted();
+        }
         this.deactivate(); // By default, restart is true
     }
 
@@ -522,11 +535,13 @@ export class HorizontalPusherTool {
             const position = cell.position();
             cell.position(position.x + deltaX, position.y);
         });
-        this.onShapesMoved();
     }
 
 
-    onShapesMoved() {
+    onMoveStarted() {
+    }
+
+    onMoveCompleted() {
     }
 
 

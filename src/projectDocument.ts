@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { ProjectNode, AbstractNode } from './metaModel';
 import { MessageClient } from './messageBus';
+import { CommandManager, ICommand } from './commands/commandManager';
+import { DiagramEditorProvider } from './views/diagramEditorProvider';
 
 class OpenProjects {
 
@@ -39,8 +41,8 @@ class OpenProjects {
     }
 
 
-    async load(uri: vscode.Uri): Promise<ProjectDocument> {
-        let doc = await ProjectDocument.loadFile(uri);
+    async load(uri: vscode.Uri, diagramEditorProvider: DiagramEditorProvider): Promise<ProjectDocument> {
+        let doc = await ProjectDocument.loadFile(uri, diagramEditorProvider);
         this._projects.set(uri.path, doc);
         return doc;
     }
@@ -59,13 +61,15 @@ export const openProjects = new OpenProjects();
 export class ProjectDocument implements vscode.CustomDocument {
     private _uri: vscode.Uri;
     private _projectNode: ProjectNode | null;
+    private _diagramEditorProvider: DiagramEditorProvider;
+    private commandManager: CommandManager;
+    
 
-    private readonly _onDidChangeDocument = new vscode.EventEmitter<void>();
-    public readonly onDidChange = this._onDidChangeDocument.event;
-
-    private constructor(uri: vscode.Uri) {
+    private constructor(uri: vscode.Uri, diagramEditorProvider: DiagramEditorProvider) {
         this._uri = uri;
         this._projectNode = null;
+        this._diagramEditorProvider = diagramEditorProvider;
+        this.commandManager = new CommandManager(this);
     }
 
     get uri(): vscode.Uri {
@@ -76,17 +80,42 @@ export class ProjectDocument implements vscode.CustomDocument {
         return this._projectNode!;
     }
 
+    get diagramEditorprovider(): DiagramEditorProvider {
+        return this._diagramEditorProvider;
+    }
+
+    public lastCommandLabel(): string {
+        return this.commandManager!.lastCommandLabel();
+    }
+
+    public exec(command: ICommand): void {
+        this.commandManager!.executeCommand(command);
+        this._diagramEditorProvider.notifyDocumentEditEvent(this);
+    }
+
+    public undo(): void {
+        this.commandManager!.undo();
+        this._diagramEditorProvider.notifyDocumentEditEvent(this);
+    }
+
+
+    public redo(): void {
+        this.commandManager!.redo();
+        this._diagramEditorProvider.notifyDocumentEditEvent(this);
+    }
+
+
     // Load data from disk into ProjectNode (called initially or in revert)
     private async loadFromDisk(): Promise<void> {
         const documentData = await vscode.workspace.fs.readFile(this._uri);
         const jsonData = JSON.parse(documentData.toString());
         this._projectNode = ProjectNode.fromJSON(jsonData);
-        this._projectNode.documentUri = this._uri;        
-        this._projectNode.isDirty = false;
+        this._projectNode.documentUri = this._uri;
+        this.commandManager.clear();
     }
 
-    public static async loadFile(uri: vscode.Uri): Promise<ProjectDocument> {
-        const document = new ProjectDocument(uri);
+    public static async loadFile(uri: vscode.Uri, diagramEditorProvider: DiagramEditorProvider): Promise<ProjectDocument> {
+        const document = new ProjectDocument(uri, diagramEditorProvider);
         await document.loadFromDisk(); // Ensure loaded before returning
         return document;
     }
@@ -95,9 +124,7 @@ export class ProjectDocument implements vscode.CustomDocument {
     public async save(cancellation?: vscode.CancellationToken): Promise<void> {
         console.log(`ProjectDocument: Saving project ${this._uri.path}`);
         const jsonContent = JSON.stringify(this._projectNode!.toJSON(), null, 2);
-        await vscode.workspace.fs.writeFile(this._uri, Buffer.from(jsonContent, 'utf8'));
-        this._projectNode!.isDirty = false;
-        this._onDidChangeDocument.fire();      
+        await vscode.workspace.fs.writeFile(this._uri, Buffer.from(jsonContent, 'utf8'));    
     }
 
 
@@ -107,23 +134,22 @@ export class ProjectDocument implements vscode.CustomDocument {
         await vscode.workspace.fs.writeFile(targetResource, Buffer.from(jsonContent, 'utf8'));
         this._uri = targetResource;
         this._projectNode!.documentUri = targetResource;
-        this._projectNode!.isDirty = false;
-
-        // Notify VS Code that the document's URI has changed
-        this._onDidChangeDocument.fire();
     }    
 
     public async revert(): Promise<void> {
         await this.loadFromDisk();
     }
 
-    public markDirty(): void {
-        this._projectNode!.isDirty = true;
-        console.log(`ProjectDocument: Project ${this._uri.path} is now dirty`);
-        this._onDidChangeDocument.fire();
+    public async backup(context: vscode.CustomDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.CustomDocumentBackup> {
+        const jsonContent = JSON.stringify(this.project.toJSON(), null, 2);
+        const fileData = Buffer.from(jsonContent, 'utf8');
+        await vscode.workspace.fs.writeFile(context.destination, fileData);
+        return {
+            id: context.destination.toString(),
+            delete: () => vscode.workspace.fs.delete(context.destination),
+        };
     }
 
     public dispose(): void {
-        this._onDidChangeDocument.dispose();
     }
 }

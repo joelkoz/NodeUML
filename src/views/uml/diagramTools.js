@@ -140,7 +140,7 @@ export class ClassToolBox {
                 // Handle meta modification events
                 const classMetaId = jsonClass._id;
                 activeClassEditor.onNewItem = async function(jsonAttribute) {
-                    msgClient.publish('createNewMeta', { 
+                    msgClient.publish('cmdCreateNewMeta', { 
                         jsonMeta: {
                             _parent: { $ref: classMetaId }, 
                             _type: 'UMLAttribute',
@@ -154,7 +154,7 @@ export class ClassToolBox {
                 };
 
                 activeClassEditor.onUpdateItem = async function(jsonAttribute) {
-                    msgClient.publish('updateMetaProperties', { 
+                    msgClient.publish('cmdUpdateMetaProperties', { 
                         metaId: jsonAttribute._id,
                         updates: [
                             { propName: 'visibility', value: jsonAttribute.visibility },
@@ -166,7 +166,7 @@ export class ClassToolBox {
                 };
 
                 activeClassEditor.onRemoveItem = function(metaId) {
-                    msgClient.publish('removeRequest', metaId);
+                    msgClient.publish('cmdRemoveMeta', metaId);
                 };
 
                 activeClassEditor.onEditorClose = function() {
@@ -232,7 +232,7 @@ export class ClassToolBox {
                 const classMetaId = jsonClass._id;
                 activeClassEditor.onNewItem = async function(jsonOperation) {
                     const jsonMeta = await getOperationJson(jsonOperation, classMetaId);
-                    msgClient.publish('createNewMeta', { 
+                    msgClient.publish('cmdCreateNewMeta', { 
                         jsonMeta, 
                         opts: {}
                     });
@@ -240,7 +240,7 @@ export class ClassToolBox {
 
                 activeClassEditor.onUpdateItem = async function(jsonOperation) {
                     const jsonMeta = await getOperationJson(jsonOperation, classMetaId);
-                    msgClient.publish('updateMetaProperties', { 
+                    msgClient.publish('cmdUpdateMetaProperties', { 
                         metaId: jsonOperation._id,
                         updates: [
                             { propName: 'visibility', value: jsonMeta.visibility },
@@ -253,7 +253,7 @@ export class ClassToolBox {
                 };
 
                 activeClassEditor.onRemoveItem = function(metaId) {
-                    msgClient.publish('removeRequest', metaId);
+                    msgClient.publish('cmdRemoveMeta', metaId);
                 };
 
                 activeClassEditor.onEditorClose = function() {
@@ -302,7 +302,7 @@ export class ClassToolBox {
                       const { value: choice } = result;
                       if (choice === "fromModel") {
                          console.log(`Request removal of meta id ${elementView.model.attributes.metaId} from model`);
-                         msgClient.publish('removeRequest', elementView.model.attributes.metaId);
+                         msgClient.publish('cmdRemoveMeta', elementView.model.attributes.metaId);
                       }
                       else if (choice === "fromDiagram") {
                          console.log(`Removing shape ${elementView.model.id} from diagram`);
@@ -357,7 +357,7 @@ export class LinkToolBox {
                       const { value: choice } = result;
                       if (choice === "fromModel") {
                          console.log(`Request removal of link meta id ${linkView.model.attributes.metaId} from model`);
-                         msgClient.publish('removeRequest', linkView.model.attributes.metaId);
+                         msgClient.publish('cmdRemoveMeta', linkView.model.attributes.metaId);
                       }
                       else if (choice === "fromDiagram") {
                          console.log(`Removing link shape ${linkView.model.id} from diagram`);
@@ -416,7 +416,7 @@ export class ActorToolBox {
                       const { value: choice } = result;
                       if (choice === "fromModel") {
                          console.log(`Request removal of meta id ${elementView.model.attributes.metaId} from model`);
-                         msgClient.publish('removeRequest', elementView.model.attributes.metaId);
+                         msgClient.publish('cmdRemoveMeta', elementView.model.attributes.metaId);
                       }
                       else if (choice === "fromDiagram") {
                          console.log(`Removing shape ${elementView.model.id} from diagram`);
@@ -480,7 +480,7 @@ function createAssociation(sourceModel, sourcePos, targetModel, targetPos) {
         targetModel?.attributes?.type === 'custom.UMLClass') {
             metaModel.findId(sourceModel.attributes.metaId)
             .then(sourceNode => {
-                msgClient.publish('createNewMeta', { 
+                msgClient.publish('cmdCreateNewMeta', { 
                     jsonMeta: { 
                         _parent: sourceNode?._parent,
                         name: `${sourceModel.attributes.name}To${targetModel.attributes.name}`,
@@ -515,7 +515,7 @@ function createDependency(sourceModel, sourcePos, targetModel, targetPos) {
         allowedTypes.includes(targetModel?.attributes?.type)) {
             metaModel.findId(sourceModel.attributes.metaId)
             .then(sourceNode => {
-                msgClient.publish('createNewMeta', { 
+                msgClient.publish('cmdCreateNewMeta', { 
                     jsonMeta: { 
                         _parent: sourceNode?._parent,
                         name: `${sourceModel.attributes.name}To${targetModel.attributes.name}`,
@@ -548,7 +548,7 @@ function createGeneralization(sourceModel, sourcePos, targetModel, targetPos) {
         targetModel?.attributes?.type === 'custom.UMLClass') {
             metaModel.findId(sourceModel.attributes.metaId)
             .then(sourceNode => {
-                msgClient.publish('createNewMeta', { 
+                msgClient.publish('cmdCreateNewMeta', { 
                     jsonMeta: { 
                         _parent: sourceNode?._parent,
                         name: `${sourceModel.attributes.name}To${targetModel.attributes.name}`,
@@ -578,16 +578,16 @@ function createNewClassOnClick(stereotypeName) {
             metaModel.findStereotype(stereotypeName)
             .then((stereotype) => {
                 if (stereotype) {
-                    return msgClient.publish('createNewMeta', { jsonMeta: { _type: 'UMLClass', stereotypes: [ { $ref: stereotype._id} ]} , opts: { pos: clickPos }});
+                    return msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass', stereotypes: [ { $ref: stereotype._id} ]} , opts: { pos: clickPos }});
                 }
                 else {
                     console.error(`Could not find stereotype ${stereotypeName} in model. Creating naked class`);                
-                    return msgClient.publish('createNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos }});
+                    return msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos }});
                 }
             });
         }
         else {
-            msgClient.publish('createNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos }});
+            msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos }});
         }
         ActiveTool.clear();          
     };
@@ -611,7 +611,7 @@ function addActorOnClickWithName(actorName) {
 
 
 function createNewActorOnClick(clickPos) {
-    msgClient.publish('createNewMeta', { jsonMeta: { _type: 'UMLActor'} , opts: { pos: clickPos }});
+    msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLActor'} , opts: { pos: clickPos }});
     ActiveTool.clear();          
 }
 
@@ -901,3 +901,57 @@ defaults() {
 
 }
 joint.shapes.custom.UMLGeneralizationProxy = UMLGeneralizationProxy;
+
+
+export class ShapeMoveUndo {
+
+    /**
+     * 
+     * @param {[joint.dia.Cell]} shapeList a array of JointJS cell objects
+     * to track movement
+     */
+    constructor(shapeList) {
+        this.shapeList = shapeList;
+        this.before = [];
+        this.getShapePos(this.before);
+    }
+
+    getShapePos(positionList) {
+        this.shapeList.forEach((shape, index) => {
+            const position = shape.position();
+            positionList.push({ shapeId: shape.id, pos: { x: position.x, y: position.y } });
+        });
+    }
+
+    moveCompleted() {
+        this.after = [];
+        this.getShapePos(this.after);
+        msgClient.publish('cmdAddUndoRedo', { 
+            label: 'Move shapes', 
+            op: 'MoveShapes', 
+            opts: { 
+                before: this.before, 
+                after: this.after 
+            }
+        });
+    }
+}
+
+
+export const UndoFunctions = {
+    undo_MoveShapes: (paper, graph, opts) => {
+        const shapeList = opts.before;
+        shapeList.forEach((entry) => {
+            const shape = graph.getCell(entry.shapeId);
+            shape.position(entry.pos.x, entry.pos.y);
+        });
+    },
+
+    redo_MoveShapes: (paper, graph, opts) => {
+        const shapeList = opts.after;
+        shapeList.forEach((entry) => {
+            const shape = graph.getCell(entry.shapeId);
+            shape.position(entry.pos.x, entry.pos.y);
+        });        
+    },
+};
