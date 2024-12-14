@@ -6,9 +6,8 @@ import { PropertiesProvider } from './views/propertiesProvider';
 import { DiagramEditorProvider } from './views/diagramEditorProvider';
 import { MessageClient, PLCreateNewMeta, PLMetaModelChange, PLUpdateMetaProperties } from './messageBus';
 import { openProjects } from './projectDocument';
-import * as utils from "./utils";
 import * as cmd from "./commands/commands";
-
+import * as gen from "./codeGeneration";
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -248,5 +247,46 @@ console.log('nodeuml.activate: ModelTreeProvider selection changed');
             modelTreeProvider.selectedNode = null;
         }
     });
+
+
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('nodeuml.generateCode', () => {
+            gen.generateCode();
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('nodeuml.generateCodeFromMenu', () => {
+            gen.generateCode();
+        })
+    );
+
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('nodeuml.configure', () => {
+            gen.openSettingsForConfiguration();
+        })
+    );
+
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('nodeuml.selectTargetPlatform', () => {
+            gen.selectTargetPlatform();
+        })
+    );
+
+    
+    context.subscriptions.push(
+        vscode.commands.registerCommand('nodeuml.installNodeMDA', () => {
+            gen.installNodeMDAPlugin();
+        })
+    );    
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('nodeuml.checkNodeMDA', () => {
+            gen.isNodeMDAInstalled();
+        })
+    );    
 
 }
