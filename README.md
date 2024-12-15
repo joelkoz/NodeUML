@@ -118,7 +118,9 @@ NodeUML is an open-source project. Contributions are welcome! To contribute:
 
 ## Why NodeUML?
 Why did I write this extension? I am a big believer in Open Source Software. After a long career in software developent where I benefited greaty from OSS, I felt a need to give back. Having developed a large, commercially successful SaaS application in Java using the MDA methodology, I wrote NodeMDA in 2016 as a way to learn NodeJS. 
+
 This year, I wanted to practice coding using ChatGPT. As I continued to push the envelope of what ChatGPT could do, I tried to think of the most ambitious project I could give to ChatGPT. I had switched to VSCode as my preferred IDE about six years ago. I had just finished a new plugin for NodeMDA to create apps using Koa, React, and MongoDB (I wrote that to learn that platform).  I always wanted a free, open source UML tool taylored specificially for use with NodeMDA. I had no idea how to write an extension, so those two converged and I decided to get ChatGPT to write the extension for me.  A large percentage of the code that makes up NodeUML was written by ChatGPT - I'd guess about 75%. However, that 75% did not come out on its own.  It took a lot of work on my part to get that code to work, checking it, and having ChatGPT write and rewrite the code until it worked like I wanted.  The experience was much closer to a "paired programming" project where two developers worked side by side. I would say the final result is a 50/50 effort, where my design specs, oversight, and testing was required to finish the job.  As a matter of fact, the instructions in this README was written by ChatGPT, with the exception of this paragraph. Next up is for me to create a NodeMDA plugin that generates specifications to prompt an LLM to write specs for the designed UML model.
+
 ---
 
 ## License
