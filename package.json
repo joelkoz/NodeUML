@@ -3,7 +3,7 @@
   "displayName": "nodeUML",
   "description": "Create UML class diagrams and generate code with NodeMDA",
   "publisher": "joelkoz",
-  "version": "0.0.1",
+  "version": "0.5.0",
   "engines": {
     "vscode": "^1.94.0"
   },
