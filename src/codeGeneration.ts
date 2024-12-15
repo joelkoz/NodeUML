@@ -217,7 +217,7 @@ export async function generateCode() {
   const currentProjectDoc = openProjects.currentProjectDoc;
   if (!currentProjectDoc) {
     vscode.window.showErrorMessage(
-      'No active UML model found. Please open a UML model editor before running the code generator.'
+      'Please make a UML diagram editor the active tab\nbefore running the code generator.'
     );
     return;
   }
