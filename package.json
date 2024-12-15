@@ -1,7 +1,8 @@
 {
-  "name": "nodeUML",
+  "name": "nodeuml",
   "displayName": "nodeUML",
   "description": "Create UML class diagrams and generate code with NodeMDA",
+  "publisher": "joelkoz",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.94.0"
@@ -12,6 +13,30 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "NodeUML Code Generator",
+      "properties": {
+        "nodeuml.nodemda.status": {
+          "type": "string",
+          "default": "Unknown",
+          "markdownDescription": "NodeMDA Status: [Check Status](command:nodeuml.checkNodeMDA) | [Install NodeMDA and NodeUML](command:nodeuml.installNodeMDA)",
+          "description": "Status of NodeMDA and NodeUML reader.",
+          "scope": "resource"
+        },
+        "nodeuml.nodemda.targetPlatform": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Target platform for code generation. [Select Target Platform](command:nodeuml.selectTargetPlatform)",
+          "scope": "resource"
+        },
+        "nodeuml.nodemda.forceOverwrite": {
+          "type": "boolean",
+          "default": false,
+          "description": "Force overwrite of existing files during code generation.",
+          "scope": "resource"
+        }
+      }
+    },    
     "viewsContainers": {
       "activitybar": [
         {
@@ -47,8 +72,41 @@
     ],
     "commands": [
       {
+        "command": "nodeuml.generateCode",
+        "title": "NodeUML: Generate source code"
+      },
+
+      {
+        "command": "nodeuml.generateCodeFromMenu",
+        "title": "Generate code from UML",
+        "when": false
+      },
+
+      {
+        "command": "nodeuml.configure",
+        "title": "NodeUML: Configure code generator"
+      },
+
+      {
+        "command": "nodeuml.selectTargetPlatform",
+        "title": "NodeUML: Select target platform for code generation"
+      },
+
+      {
+        "command": "nodeuml.installNodeMDA",
+        "title": "NodeUML: Install NodeMDA"
+      },
+
+      {
+        "command": "nodeuml.checkNodeMDA",
+        "title": "Check NodeMDA installation",
+        "when": false
+      },
+
+      {
         "command": "nodeuml.refreshModel",
-        "title": "Refresh Model Explorer"
+        "title": "Refresh Model Explorer",
+        "when": false
       },
       {
         "command": "nodeuml.createUMLModel",
@@ -56,65 +114,79 @@
       },
       {
         "command": "nodeuml.addClass",
-        "title": "Class"
+        "title": "Class",
+        "when": false
       },
       {
         "command": "nodeuml.addPackage",
-        "title": "Package"
+        "title": "Package",
+        "when": false
       },
       {
         "command": "nodeuml.addAttribute",
-        "title": "Attribute"
+        "title": "Attribute",
+        "when": false
       },
       {
         "command": "nodeuml.addOperation",
-        "title": "Operation"
+        "title": "Operation",
+        "when": false
       },
       {
         "command": "nodeuml.addParameter",
-        "title": "Parameter"
+        "title": "Parameter",
+        "when": false
       },
       {
         "command": "nodeuml.addProfile",
-        "title": "Profile"
+        "title": "Profile",
+        "when": false
       },
       {
         "command": "nodeuml.addDataType",
-        "title": "Data type"
+        "title": "Data type",
+        "when": false
       },
       {
         "command": "nodeuml.addTagDef",
-        "title": "Tag definition"
+        "title": "Tag definition",
+        "when": false
       },
       {
         "command": "nodeuml.addStereotype",
-        "title": "Stereotype"
+        "title": "Stereotype",
+        "when": false
       },
       {
         "command": "nodeuml.addActor",
-        "title": "Actor"
+        "title": "Actor",
+        "when": false
       },
       {
         "command": "nodeuml.updateProperty",
-        "title": "Update Property"
+        "title": "Update Property",
+        "when": false
       },
       {
         "command": "nodeuml.removeNode",
-        "title": "Remove"
+        "title": "Remove",
+        "when": false
       },
       {
         "command": "nodeuml.removeById",
-        "title": "Remove element by meta Id"
+        "title": "Remove element by meta Id",
+        "when": false
       },
       {
         "command": "nodeuml.createNewMeta",
-        "title": "Create new UML element"
+        "title": "Create new UML element",
+        "when": false
       },
       {
         "command": "nodeuml.updateMetaProperties",
-        "title": "Updates one or more properties on a meta element"
+        "title": "Updates one or more properties on a meta element",
+        "when": false
       }
-
     ],
     "keybindings": [
       {
@@ -142,6 +214,14 @@
           "args": {
             "uri": "${resourceUri}"
           }
+        },
+        {
+          "command": "nodeuml.generateCodeFromMenu",
+          "group": "umlTools",
+          "when": "filesExplorerFocus",
+          "args": {
+            "uri": "${resourceUri}"
+          }
         }
       ],
       "view/item/context": [
@@ -156,6 +236,12 @@
           "label": "Remove Element",
           "group": "umlTools",
           "when": "view == modelExplorer && (viewItem =~ /UML.*/ || viewItem == Profiles)"
+        },
+        {
+          "command": "nodeuml.generateCodeFromMenu",
+          "label": "Generate code",
+          "group": "umlTools",
+          "when": "view == modelExplorer && (viewItem == UMLModel || viewItem == Project)"
         }
       ],
       "uml.addElement": [
