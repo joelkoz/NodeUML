@@ -1,9 +1,10 @@
 {
   "name": "nodeuml",
-  "displayName": "nodeUML",
+  "displayName": "NodeUML",
   "description": "Create UML class diagrams and generate code with NodeMDA",
   "publisher": "joelkoz",
-  "version": "0.5.0",
+  "icon": "media/nodeuml-icon.png",
+  "version": "0.9.0",
   "engines": {
     "vscode": "^1.94.0"
   },
