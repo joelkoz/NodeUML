@@ -33,6 +33,10 @@ function addNewElement(doc: ProjectDocument, parent: meta.AbstractNode, element:
     else if (parent instanceof meta.ProfileRootNode) {
         parent.addProfile(element);
     }
+    else if (!parent) {
+       console.error('addNewElement: parent is null - ignoring command');
+       return;
+    }
     element._parent = parent;
     doc.project!.metaNodeAdded(element);
     msgClient.publish('onCreateMeta', { projectId: doc.project!._id, element, opts });        
@@ -136,8 +140,8 @@ export class AddElement implements ICommand {
             if (!element.name) {
                element.name = getUniqueName(parent, element);
             }
-        }    
-        this.parentId = parent._id;
+        }
+        this.parentId = parent?._id;
         this.jsonElement = element.toJSON(false);
         this.opts = opts;
     }
@@ -147,9 +151,22 @@ export class AddElement implements ICommand {
     }
 
     execute(doc: ProjectDocument): void {
-        const parent = doc.project.findById(this.parentId)!;
-        const element = doc.project!.metaFactory(this.jsonElement)!;
-        addNewElement(doc, parent, element, this.opts);
+
+        let parent = doc.project.findById(this.parentId);
+
+        if (!parent && this.jsonElement._type === 'UMLProfile') {
+            // Profile nodes don't have a parent, so use our
+            // project's root profile node
+            parent = doc.project!.profiles;
+        }
+
+        if (parent) {
+           const element = doc.project!.metaFactory(this.jsonElement)!;
+           addNewElement(doc, parent, element, this.opts);
+        }
+        else {
+            console.error(`AddElement.execute() failed: could not find parent ${this.parentId}`);
+        }
     }
 
     undo(doc: ProjectDocument): void {
