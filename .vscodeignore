@@ -2,7 +2,11 @@
 .vscode-test/**
 out/**
 node_modules/**
-src/**
+src/*.ts
+src/test/**
+src/views/uml/umlTest*
+src/views/uml/example*
+src/views/uml/icons
 package-lock.json
 .gitignore
 .yarnrc

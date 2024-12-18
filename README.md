@@ -34,12 +34,24 @@
    cd NodeUML
    ```
 2. Install dependencies:
+
+   *From NodeUML directory*
    ```bash
    npm install
    ```
 3. Open the project folder in Visual Studio Code.
 4. Press `F5` to launch the extension in a development environment.
 
+5. (Optional): Bundle as .vsix file and install directly into vscode:
+
+   *From NodeUML directory*
+
+   ```
+   npm install -g vsce
+
+   vsce package
+   ```
+   *Then select "Install from VSIX" from VSCode Extensions panel*
 ---
 
 ## Workflow Overview
@@ -56,6 +68,8 @@
 ### Creating a New Model
 1. Open a folder in VSCode.
 2. Right-click on a file or folder in the File Explorer and select **New UML Model**.
+
+   (*alternative*) Select File -> New File -> New UML Model 
 3. A `.numl` file will be created in a `uml` folder and opened in the Diagram Editor.
 
 ### Editing a Model
@@ -120,7 +134,7 @@ NodeUML is an open-source project. Contributions are welcome! To contribute:
 
 Why did I write this extension? I am a big believer in Open Source Software. After a long career in software development where I benefited greatly from OSS, I felt a need to give back. Having developed a large, commercially successful SaaS application in Java using the MDA methodology, I wrote NodeMDA in 2016 as a way to learn Node.js. 
 
-This year, I wanted to practice coding using ChatGPT. As I continued to push the envelope of what ChatGPT could do, I tried to think of the most ambitious project I could give it (within reason). I had switched to VSCode as my preferred IDE about six years ago. I had just finished a new plugin for NodeMDA to create apps using Koa, React, and MongoDB (I wrote that to learn that platform). I had long envisioned a free, open-source UML tool designed to integrate seamlessly with NodeMDA. I had no idea how to write an extension, so those two converged, and I decided to get ChatGPT to write the extension for me. A large percentage of the code that makes up NodeUML was written by ChatGPT—I’d guess about 80%. However, that 80% did not come out on its own. It took a lot of work on my part to get that code to work, checking it, and having ChatGPT write and rewrite the code until it worked like I wanted. The experience was much closer to a “pair programming” project where two developers worked side by side. I would say the final result is a 50/50 effort, where my design specs, oversight, and testing were required to finish the job. As a matter of fact, the instructions in this README were written by ChatGPT, with the exception of this paragraph. Next, I plan to create a NodeMDA plugin that generates specifications to prompt an LLM to write specs for the designed UML model.
+In 2024, I wanted to practice coding using ChatGPT. As I continued to push the envelope of what ChatGPT could do, I tried to think of the most ambitious project I could give it (within reason). I had switched to VSCode as my preferred IDE about eight years ago. I had just finished a new plugin for NodeMDA to create apps using Koa, React, and MongoDB (I wrote that to learn that platform). I had long envisioned a free, open-source UML tool designed to integrate seamlessly with NodeMDA. I had no idea how to write an extension, so those two converged, and I decided to get ChatGPT to write the extension for me. A large percentage of the code that makes up NodeUML was written by ChatGPT—I’d guess about 80%. However, that 80% did not come out on its own. It took a lot of work on my part to get that code to work, checking it, and having ChatGPT write and rewrite the code until it worked like I wanted. The experience was much closer to a “pair programming” project where two developers worked side by side. I would say the final result is a 50/50 effort, where my design specs, oversight, and testing were required to finish the job. As a matter of fact, the instructions in this README were written by ChatGPT, with the exception of this paragraph. Next, I plan to create a NodeMDA plugin that generates a prompt to an LLM to write code from specifications generated from the designed UML model
 
 ---
 
