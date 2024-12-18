@@ -509,13 +509,13 @@ export class ClassEditorBase {
   
     isValidInput(value) {
       const regex =
-        /^[\+\-\#][a-zA-Z][a-zA-Z0-9]*\s*:\s*[a-zA-Z][a-zA-Z0-9]*(\s*\[\d+\.\.\*?\])?$/;
+          /^[\+\-\#][a-zA-Z][a-zA-Z0-9]*\s*:\s*[a-zA-Z][a-zA-Z0-9]*(\s*\[(\d+|\d+\.\.\d+|\d+\.\.\*)\])?$/;
       return regex.test(value);
     }
   
     parseItem(value) {
       const regex =
-        /^([\+\-\#])([a-zA-Z][a-zA-Z0-9]*)\s*:\s*([a-zA-Z][a-zA-Z0-9]*)(\s*\[(\d+\.\.\*?)\])?$/;
+          /^([\+\-\#])([a-zA-Z][a-zA-Z0-9]*)\s*:\s*([a-zA-Z][a-zA-Z0-9]*)(\s*\[(\d+|\d+\.\.\d+|\d+\.\.\*)\])?$/;
       const match = value.match(regex);
       if (!match) {
         return null;
