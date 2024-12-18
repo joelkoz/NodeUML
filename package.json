@@ -5,6 +5,14 @@
   "publisher": "joelkoz",
   "icon": "media/nodeuml-icon.png",
   "version": "0.9.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jkoz/nodeuml.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jkoz/nodeuml/issues"
+  },
+  "homepage": "https://github.com/jkoz/nodeuml#readme",  
   "engines": {
     "vscode": "^1.94.0"
   },

@@ -170,7 +170,7 @@ export class DiagramEditor {
         const webview = this.panel!.webview;
 
         const mediaUri = vscode.Uri.joinPath(this.context.extensionUri, 'media');
-        const jointUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'joint.js'));
+        const jointUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'joint.min.js'));
         const swalUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'sweetalert2.all.min.js'));
         const awesompleteUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, 'awesomplete.min.js'));
 
