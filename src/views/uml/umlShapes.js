@@ -191,6 +191,9 @@ export class UMLClassBase extends joint.dia.Element {
 
             if (ndx >= 3) {
                // attrs and methods get their own box - set the height and translate
+               if (ndx === 4) {
+                   rectHeight += 5;
+               }
                attrs['umlClass' + rect.txtName + 'Rect'].height = rectHeight;
                attrs['umlClass' + rect.txtName + 'Rect'].transform = 'translate(0,' + offsetY + ')';
             }
@@ -373,7 +376,7 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
         // repaint problem
         setTimeout(() => {
             this.refreshLabels();
-        }, 100);
+        }, 10);
     }
 
     refreshLabels() {

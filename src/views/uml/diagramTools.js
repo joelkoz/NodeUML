@@ -358,7 +358,14 @@ joint.linkTools.CustomSourceAnchor = joint.linkTools.SourceAnchor.extend({
 
     onPointerUp: function(evt) {
         joint.linkTools.SourceAnchor.prototype.onPointerUp.call(this, evt);
+
         const source = this?.relatedView?.model?.get('source');
+
+        normalizeAnchor(this?.relatedView?.model, 'source', source);
+        if (this?.relatedView?.model.refreshLabels) {
+            this.relatedView.model.refreshLabels();
+        }
+
         if (this._moveUndo) {
             this._moveUndo.moveCompleted(source);
             delete this._moveUndo;
@@ -367,6 +374,47 @@ joint.linkTools.CustomSourceAnchor = joint.linkTools.SourceAnchor.extend({
 });
 
 
+function normalizeAnchor(model, propertyName, value) {
+    const desiredValues = ['0%', '100%'];
+    const args = value.anchor.args;
+    if (desiredValues.includes(args.dx) || desiredValues.includes(args.dy)) {
+        // All is good
+        return;
+    }
+
+    // The anchor is NOT locked to a side. Determine
+    // the closest side. First, fill the dist array
+    // in a clockwise manner starting with dy in 12p
+    // position.
+    const dx = parseFloat(args.dx.slice(0, -1));
+    const dy = parseFloat(args.dy.slice(0, -1));
+    const dist = [
+        Math.abs(dy),
+        Math.abs(100 - dx),
+        Math.abs(100 - dy),
+        Math.abs(dx)
+    ];
+
+    let smallestVal = Math.min(...dist);
+    let smallestIndex = dist.indexOf(smallestVal);
+
+    switch (smallestIndex) {
+        case 0:
+            args.dy = '0%';
+            break;
+        case 1:
+            args.dx = '100%';
+            break;
+        case 2:
+            args.dy = '100%';
+            break;
+        case 3:
+            args.dx = '0%';
+            break;
+    }
+
+    model.prop(`${propertyName}.anchor.args`, args);
+}
 
 joint.linkTools.CustomTargetAnchor = joint.linkTools.TargetAnchor.extend({
 
@@ -384,6 +432,12 @@ joint.linkTools.CustomTargetAnchor = joint.linkTools.TargetAnchor.extend({
     onPointerUp: function(evt) {
         joint.linkTools.TargetAnchor.prototype.onPointerUp.call(this, evt);
         const target = this?.relatedView?.model?.get('target');
+
+        normalizeAnchor(this?.relatedView?.model, 'target', target);
+        if (this?.relatedView?.model.refreshLabels) {
+            this.relatedView.model.refreshLabels();
+        }
+
         if (this._moveUndo) {
             this._moveUndo.moveCompleted(target);
             delete this._moveUndo;
@@ -512,7 +566,8 @@ export class ActorToolBox {
 function canStartClassLink(shapeModel, shapeClickPos) {
     if (shapeModel?.attributes?.type === 'custom.UMLClass') {
        const bbox = shapeModel.getBBox();
-       return (shapeClickPos.x <= 20 || shapeClickPos.x >= bbox.width - 20);
+       return (shapeClickPos.x <= 20 || shapeClickPos.x >= bbox.width - 20) ||
+              (shapeClickPos.y <= 20 || shapeClickPos.y >= bbox.height - 20);
     }
     return false;
 }
@@ -775,7 +830,7 @@ const commandPalette = new CommandPalette({
                 ActiveTool.getLinkProxy = createAssociationProxy;
                 ActiveTool.createLink = createAssociation;
                 ActiveTool.onPaperClick = ActiveTool.clear;
-                ActiveTool.useTopBottomAnchors = false;
+                ActiveTool.useTopBottomAnchors = true;
                 ActiveTool.useCenterTopBottomAnchors = false;
                 ActiveTool.useLeftRightAnchors = true;
                 commandPalette.setActiveTool(icons.svgAssociation);
