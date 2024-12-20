@@ -12,7 +12,7 @@ import { metaModel } from './metaModel.js';
 *   // Your additional logic before the original method
 *   console.log('Custom logic before the original function.');
 *
-*   // Call the original method
+*   // Call the original method, auto passing any arguments:
 *   superMethod();
 *
 *   // Or, if you need to modify arguments:
