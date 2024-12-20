@@ -450,8 +450,10 @@ joint.linkTools.CustomTargetAnchor = joint.linkTools.TargetAnchor.extend({
 export class LinkToolBox {
 
     constructor() {
-        this.verticesTool = new joint.linkTools.Vertices();
-        this.segmentsTool = new joint.linkTools.Segments();
+        // Vertices and Segments are not supported by rightAngle router
+        // Only compatible with "normal" router
+        // this.verticesTool = new joint.linkTools.Vertices();
+        // this.segmentsTool = new joint.linkTools.Segments();
         this.sourceArrowheadTool = new joint.linkTools.SourceArrowhead();
         this.targetArrowheadTool = new joint.linkTools.TargetArrowhead();
         this.sourceAnchorTool = new joint.linkTools.CustomSourceAnchor();
@@ -484,7 +486,7 @@ export class LinkToolBox {
 
         this.toolBox = new joint.dia.ToolsView({
             tools: [
-                this.verticesTool, this.segmentsTool,
+//                this.verticesTool, this.segmentsTool,
                 this.sourceAnchorTool, this.targetAnchorTool,
                 this.boundaryTool, this.removeButton
             ]
