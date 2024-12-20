@@ -589,7 +589,7 @@ function canStartGeneralization(shapeModel, shapeClickPos) {
 // Creates an association between sourceModel and targetModel provided
 // they are both UMLClass shapes. If the link is considered invalid,
 // do nothing.
-function createAssociation(sourceModel, sourcePos, targetModel, targetPos) {
+function createAssociation(sourceModel, sourcePos, targetModel, targetPos, vertices) {
     if (sourceModel?.attributes?.type === 'custom.UMLClass' && 
         targetModel?.attributes?.type === 'custom.UMLClass') {
             metaModel.findId(sourceModel.attributes.metaId)
@@ -611,7 +611,8 @@ function createAssociation(sourceModel, sourcePos, targetModel, targetPos) {
                     } , 
                     opts: {
                         sourcePos,
-                        targetPos
+                        targetPos,
+                        vertices
                     }});
             });
             ActiveTool.clear();

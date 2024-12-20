@@ -245,11 +245,14 @@ export class UMLClass extends umlShapes.UMLClassBase {
  
     defaults() {
        return joint.util.defaultsDeep( {
-          type: 'custom.UMLAssociation'
+          type: 'custom.UMLAssociation',
+          router: {
+              name: 'normal'
+          }  
        }, super.defaults());
     }
  
- 
+    
     async metaToProps(linkNode) {
        super.metaToProps(linkNode);
        if (linkNode.end1.navigable !== linkNode.end2.navigable) {

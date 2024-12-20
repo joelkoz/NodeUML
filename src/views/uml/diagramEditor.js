@@ -49,7 +49,8 @@ export const paper = new joint.dia.Paper({
           const targetY = asPct(linkView.targetPoint.y - targetBBox.y, targetBBox.height);
           const sourcePos = { x: sourceX, y: sourceY };
           const targetPos = { x: targetX, y: targetY };
-          ActiveTool.createLink(linkView.sourceView.model, sourcePos, linkView.targetView.model, targetPos);
+          const vertices = linkView.route;
+          ActiveTool.createLink(linkView.sourceView.model, sourcePos, linkView.targetView.model, targetPos, vertices);
       }
       return false;
    },
@@ -434,6 +435,7 @@ shapeFactory.set('UMLAssociation', {
                      }
                   }
              });
+             umlAssoc.set('vertices', opts.vertices);
              umlAssoc.metaToProps(assocNode);
              return umlAssoc;
    },
