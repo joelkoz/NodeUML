@@ -333,6 +333,65 @@ export class ClassToolBox {
 }
 
 
+// Inside of a linkTool anchor method:
+// const linkView = this.relatedView;
+// const position = linkView.sourcePoint;
+// const anchor = linkView.sourceAnchor;
+// const linkModel = linkView.model;
+// const sourceModel = linkView.sourceView.model;
+// const targetModel = linkView.targetView.model;
+
+
+
+
+joint.linkTools.CustomSourceAnchor = joint.linkTools.SourceAnchor.extend({
+    onPointerMove(evt) {
+        joint.linkTools.SourceAnchor.prototype.onPointerMove.call(this, evt);
+        this?.relatedView?.model?.refreshLabels();
+    },
+
+    onPointerDown: function(evt) {
+        joint.linkTools.SourceAnchor.prototype.onPointerDown.call(this, evt);
+        const source = this?.relatedView?.model?.get('source');
+        this._moveUndo = new AnchorMoveUndo(this.relatedView.model.id, 'source', source);
+    },
+
+    onPointerUp: function(evt) {
+        joint.linkTools.SourceAnchor.prototype.onPointerUp.call(this, evt);
+        const source = this?.relatedView?.model?.get('source');
+        if (this._moveUndo) {
+            this._moveUndo.moveCompleted(source);
+            delete this._moveUndo;
+        }
+    }
+});
+
+
+
+joint.linkTools.CustomTargetAnchor = joint.linkTools.TargetAnchor.extend({
+
+    onPointerMove(evt) {
+        joint.linkTools.TargetAnchor.prototype.onPointerMove.call(this, evt);
+        this?.relatedView?.model?.refreshLabels();
+    },
+
+    onPointerDown: function(evt) {
+        joint.linkTools.TargetAnchor.prototype.onPointerDown.call(this, evt);
+        const target = this?.relatedView?.model?.get('target');
+        this._moveUndo = new AnchorMoveUndo(this.relatedView.model.id, 'target', target);
+    },
+
+    onPointerUp: function(evt) {
+        joint.linkTools.TargetAnchor.prototype.onPointerUp.call(this, evt);
+        const target = this?.relatedView?.model?.get('target');
+        if (this._moveUndo) {
+            this._moveUndo.moveCompleted(target);
+            delete this._moveUndo;
+        }
+    }    
+});
+
+
 
 export class LinkToolBox {
 
@@ -341,8 +400,8 @@ export class LinkToolBox {
         this.segmentsTool = new joint.linkTools.Segments();
         this.sourceArrowheadTool = new joint.linkTools.SourceArrowhead();
         this.targetArrowheadTool = new joint.linkTools.TargetArrowhead();
-        this.sourceAnchorTool = new joint.linkTools.SourceAnchor();
-        this.targetAnchorTool = new joint.linkTools.TargetAnchor();
+        this.sourceAnchorTool = new joint.linkTools.CustomSourceAnchor();
+        this.targetAnchorTool = new joint.linkTools.CustomTargetAnchor();
         this.boundaryTool = new joint.linkTools.Boundary();
         this.removeButton = new joint.linkTools.Remove({
             distance: '88%',
@@ -938,7 +997,44 @@ export class ShapeMoveUndo {
 }
 
 
+class AnchorMoveUndo {
+
+    constructor(linkId, anchorSide, before) {
+        this.linkId = linkId;
+        this.anchorSide = anchorSide;
+        this.before = before;
+    }
+
+
+    moveCompleted(after) {
+       msgClient.publish('cmdAddUndoRedo', { 
+           label: 'Move anchor', 
+           op: 'MoveAnchor', 
+           opts: { 
+               linkId: this.linkId,
+               anchorSide: this.anchorSide,
+               before: this.before, 
+               after: after 
+           }
+       });
+    }
+}
+
+
 export const UndoFunctions = {
+
+    undo_MoveAnchor: (paper, graph, opts) => {
+        const shape = graph.getCell(opts.linkId);
+        shape.set(opts.anchorSide, opts.before);
+        shape.refreshLabels();
+    },
+
+    redo_MoveAnchor: (paper, graph, opts) => {
+        const shape = graph.getCell(opts.linkId);
+        shape.set(opts.anchorSide, opts.after);
+        shape.refreshLabels();
+    },
+
     undo_MoveShapes: (paper, graph, opts) => {
         const shapeList = opts.before;
         shapeList.forEach((entry) => {

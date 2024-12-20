@@ -361,17 +361,33 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
 
     initialize(...args) {
         super.initialize(...args);
-        this.on('change:sourceEnd change:targetEnd change:labels', function() {
-            console.log('UMLLinkBase: change detected');
-            this.updateLabels();
-            const myView = paper.findViewByModel(this);
-            if (myView) {
-                myView.update();
-            }
+        this.on('change:sourceEnd change:targetEnd', function() {
+            this.refreshLabels();
         }, this);
 
-        this.updateLabels();
+        this.on('change:labels', function() {
+            this.refreshView();
+        }, this);
+
+        // Do a delayed refresh to prevent render
+        // repaint problem
+        setTimeout(() => {
+            this.refreshLabels();
+        }, 100);
     }
+
+    refreshLabels() {
+        this.updateLabels();
+        this.refreshView();
+    }
+
+    refreshView() {
+        const myView = paper.findViewByModel(this);
+        if (myView) {
+            myView.update();
+        }
+    }
+
 
 
     resolveShapeId(metaId) {
@@ -386,12 +402,13 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
            const shapeId = this.resolveShapeId(sourceEnd.metaId);
            if (shapeId) {
                this.prop('source', { id: shapeId });
+               const linkOnRight = (this.source().anchor.args.dx === "100%" || this.source().anchor.args.dy === "0%");
                if (sourceEnd.name) {
                    labels.push({
                         'attrs': {
                             'text': {
                                 'text': sourceEnd.name,
-                                'text-anchor': 'start',
+                                'text-anchor': linkOnRight ? 'start' : 'end',
                                 'fill': 'black',
                                 'font-size': 14, 
                                 'font-family': 'Courier New'
@@ -404,9 +421,8 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
                         },
                         'position': {
                             'distance': 5, 
-                            '_offset': { x: 10, y: -10 },
                             'offset': -12,
-                            'args': { 'keepGradient': true }
+                            'args': { 'keepGradient': true, 'ensureLegibility': true }
                         }
                    });
                }
@@ -415,7 +431,7 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
                         'attrs': {
                             'text': {
                                 'text': sourceEnd.multiplicity,
-                                'text-anchor': 'start',
+                                'text-anchor': linkOnRight ? 'start' : 'end',
                                 'fill': 'black',
                                 'font-size': 14, 
                                 'font-family': 'Courier New'
@@ -429,7 +445,7 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
                         'position': {
                             'distance': 5, 
                             'offset': 12,
-                            'args': { 'keepGradient': true }
+                            'args': { 'keepGradient': true, 'ensureLegibility': true }
 
                         }
                    });
@@ -443,12 +459,13 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
            const shapeId = this.resolveShapeId(targetEnd.metaId);
            if (shapeId) {
                this.prop('target', { id: shapeId });
+               const linkOnRight = (this.target().anchor.args.dx === "100%" || this.target().anchor.args.dy === "0%");
                if (targetEnd.name) {
                    labels.push({
                         'attrs': {
                             'text': {
                                 'text': targetEnd.name,
-                                'text-anchor': 'end',
+                                'text-anchor': linkOnRight ? 'start' : 'end',
                                 'fill': 'black',
                                 'font-size': 14, 
                                 'font-family': 'Courier New'
@@ -461,9 +478,8 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
                         },
                         'position': {
                             'distance': -5, 
-                            '_offset': { x: -10, y: -10 } ,
                             'offset': -12,
-                            'args': { 'keepGradient': true }
+                            'args': { 'keepGradient': true, 'ensureLegibility': true }
                         }
                    });
                }
@@ -472,7 +488,7 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
                         'attrs': {
                             'text': {
                                 'text': targetEnd.multiplicity,
-                                'text-anchor': 'end',
+                                'text-anchor': linkOnRight ? 'start' : 'end',
                                 'fill': 'black',
                                 'font-size': 14, 
                                 'font-family': 'Courier New'
@@ -485,9 +501,8 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
                         },
                         'position': {
                             'distance': -5, 
-                            'offset': { x: -10, y: 15 },
-                            '_offset': 12,
-                            'args': { 'keepGradient': true }
+                            'offset': 12,
+                            'args': { 'keepGradient': true, 'ensureLegibility': true }
                         }
                    });
                }
