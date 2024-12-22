@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { MetaElementNode, ClassNode } from './metaModel';
-import { SpawnSyncOptionsWithBufferEncoding } from 'child_process';
+import { ProjectDocument } from './projectDocument';
 
 // Complex message payloads have "PL" prefix
 export interface PLClassId {
@@ -27,6 +27,11 @@ export interface PLMetaModelChange {
     opts: any;
 }
 
+export interface PLUndoRedo {
+    doc: ProjectDocument;
+    undo: boolean;
+};
+
 
 /**
  * A map of message names and payload types that can be sent to either
@@ -46,6 +51,7 @@ interface IExtensionMessages extends ICommonMessages {
     "onRemoveMeta": PLMetaModelChange;
     "onCreateMeta": PLMetaModelChange;
     "onUpdateMeta": PLMetaModelChange;
+    "onUndoRedo": PLUndoRedo;
 }
 
 

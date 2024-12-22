@@ -127,6 +127,7 @@ type JsonMetaElement = {
   ownedElements?: JsonMetaElement[];
   stereotypes?: { $ref: string }[];
   tags?: { name: string; value: string }[];
+  type?: { $ref: string };
 };
 
 export class AddElement implements ICommand {
@@ -150,6 +151,60 @@ export class AddElement implements ICommand {
         return `Add ${this.jsonElement.name}`;
     }
 
+
+    /**
+     * Checks to see if any tag definitions need to be copied over
+     * to the target element. A tag copy is done whenever the element being
+     * updated is a ClassNode and a stereotype is added, or if the
+     * element is a AttributeNode and the DataType is changed
+     */
+    public checkForTagCopy(doc: ProjectDocument) {
+        if (this.jsonElement._type === 'UMLClass') {
+            // Iterate over any stereotypes and see if we need to copy tag values
+            if (this.jsonElement.stereotypes) {
+                for (const stereotype of this.jsonElement.stereotypes) {
+                    const sourceElement = doc.project.findById(stereotype.$ref);
+                    if (sourceElement instanceof meta.MetaElementNode) {
+                        this.copyTagDefinitions(sourceElement);
+                    }
+                }
+            }
+        }
+        else if (this.jsonElement._type === 'UMLAttribute') {
+            const sourceElement = doc.project.findById(this.jsonElement.type!.$ref);
+            if (sourceElement instanceof meta.DataTypeNode) {
+                this.copyTagDefinitions(sourceElement);
+            }
+        }
+    }
+
+
+    private copyTagDefinitions(sourceElement: meta.MetaElementNode) {
+        if (!this.jsonElement.tags) {
+            this.jsonElement.tags = [];
+        }
+
+        const newTagValues: { tagName: string, tagValue: string }[] = [];
+
+        // Iterate over the source element's tags and add to the newTagValues if
+        // it does not already exist in the targetElement's tags
+        for (const sourceTag of sourceElement.tags) {
+            const targetTag = this.jsonElement.tags.find(t => t.name === sourceTag.name);
+            if (!targetTag) {
+                newTagValues.push({ tagName: sourceTag.name, tagValue: sourceTag.value });
+            }
+        }
+
+        if (newTagValues.length > 0) {
+            for (const newTag of newTagValues) {
+                const tagNode = new meta.TagNode(newTag.tagName, newTag.tagValue);
+                const jsonTag = tagNode.toJSON(false);
+                this.jsonElement.tags.push(jsonTag);
+            }
+        } 
+    }
+
+    
     execute(doc: ProjectDocument): void {
 
         let parent = doc.project.findById(this.parentId);
@@ -275,6 +330,68 @@ export class UpdateProperties implements ICommand {
         this.updates = updates;
         this.oldValues = [];
     }
+
+    /**
+     * Checks to see if any tag definitions need to be copied over
+     * to the target element. A tag copy is done whenever the element being
+     * updated is a ClassNode and a stereotype is added, or if the
+     * element is a AttributeNode and the DataType is changed
+     */
+    public checkForTagCopy(doc: ProjectDocument) {
+        const targetElement = doc.project.findById(this.metaId);
+        if (targetElement instanceof meta.ClassNode) {
+            // Iterate over the updates to see if a 'stereotypes' property is changed
+            for (const update of this.updates) {
+                if (update.propName === 'stereotypes') {
+                    // the update value is an array of stereotype reference nodes
+                    // copy tags from each stereotype over to the class
+                    for (const stereotype of update.value) {
+                        const sourceElement = doc.project.findById(stereotype.$ref);
+                        if (sourceElement instanceof meta.MetaElementNode) {
+                            this.copyTagDefinitions(sourceElement, targetElement);
+                        }
+                    }
+                }
+            }
+        }
+        else if (targetElement instanceof meta.AttributeNode) {
+            // Iterate over the updates to see if the 'type' property is changed
+            for (const update of this.updates) {
+                if (update.propName === 'type') {
+                    // The update value is a datatype reference node
+                    const sourceElement = doc.project.findById(update.value.$ref);
+                    if (sourceElement instanceof meta.DataTypeNode) {
+                        this.copyTagDefinitions(sourceElement, targetElement);
+                    }
+                }
+            }
+        }
+    }
+
+
+    private copyTagDefinitions(sourceElement: meta.MetaElementNode, targetElement: meta.MetaElementNode) {
+        const newTagValues: { tagName: string, tagValue: string }[] = [];
+        // Iterate over the source element's tags and add to the newTagValues if
+        // it does not already exist in the targetElement's tags
+        for (const sourceTag of sourceElement.tags) {
+            const targetTag = targetElement.tags.find(t => t.name === sourceTag.name);
+            if (!targetTag) {
+                newTagValues.push({ tagName: sourceTag.name, tagValue: sourceTag.value });
+            }
+        }
+
+        if (newTagValues.length > 0) {
+            // Now, make a new array that includes all of the old tags plus the new tags...
+            const newTags: meta.TagNode[] = Array.from(targetElement.tags);
+            for (const newTag of newTagValues) {
+                newTags.push(new meta.TagNode(newTag.tagName, newTag.tagValue));
+            }
+
+            // Finally, add an update to the target's 'tags' property...
+            this.updates.push({ propName: 'tags', value: newTags });
+        } 
+    }
+
 
     get label(): string {
         return `Change property`;

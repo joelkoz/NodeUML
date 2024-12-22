@@ -4,7 +4,7 @@ import { createUMLModelCommand } from './commands/createUMLModel';
 import  * as meta from './metaModel';
 import { PropertiesProvider } from './views/propertiesProvider';
 import { DiagramEditorProvider } from './views/diagramEditorProvider';
-import { MessageClient, PLCreateNewMeta, PLMetaModelChange, PLUpdateMetaProperties } from './messageBus';
+import { MessageClient, PLCreateNewMeta, PLMetaModelChange, PLUpdateMetaProperties, PLUndoRedo } from './messageBus';
 import { openProjects } from './projectDocument';
 import * as cmd from "./commands/commands";
 import * as gen from "./codeGeneration";
@@ -73,9 +73,9 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-
     function execAddElement(parent: meta.AbstractNode, element: meta.MetaElementNode, opts: any) {
         const cmdAddElement = new cmd.AddElement(parent, element, opts);
+        cmdAddElement.checkForTagCopy(openProjects.currentProjectDoc!);
         openProjects.currentProjectDoc!.exec(cmdAddElement);
     }
 
@@ -83,6 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('nodeuml.updateProperty', (propName, value) => {
             if (modelTreeProvider.selectedNode) {
                 const cmdUpdateProperty = new cmd.UpdateProperties(modelTreeProvider.selectedNode._id, [ { propName, value }]);
+                cmdUpdateProperty.checkForTagCopy(openProjects.currentProjectDoc!);
                 openProjects.currentProjectDoc!.exec(cmdUpdateProperty);
             }
         })
@@ -166,6 +167,7 @@ export function activate(context: vscode.ExtensionContext) {
                 const node = openProjects.findNodeById(payload.metaId);
                 if (node instanceof meta.MetaElementNode) {
                     const cmdUpdateProperty = new cmd.UpdateProperties(payload.metaId, payload.updates);
+                    cmdUpdateProperty.checkForTagCopy(openProjects.currentProjectDoc!);
                     openProjects.currentProjectDoc!.exec(cmdUpdateProperty);                    
                 }
             }
@@ -328,5 +330,10 @@ console.log('nodeuml.activate: ModelTreeProvider selection changed');
             }
         })
     );
+
+
+    msgClient.subscribe('onUndoRedo', (payload: PLUndoRedo) => {
+        propertiesProvider.refresh();
+    });
 
 }

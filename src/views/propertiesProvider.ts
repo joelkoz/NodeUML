@@ -587,11 +587,21 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
         `;
     }
 
+
+    public refresh() {
+        this.setSelectedNode(this._selectedNode);
+    }
+
+
     private handleUpdateProperty(field: string, value: any) {
         if (this._selectedNode) {
             console.log(`PropertiesProvider: web view sent updateProperty('${field}', ${JSON.stringify(value)})...`);
             // Check if value is a reference object
             vscode.commands.executeCommand('nodeuml.updateProperty', field, value);
+
+            if (field === 'type' || field === 'stereotypes') {
+                this.refresh();
+            }
         }
     }
 }

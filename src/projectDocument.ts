@@ -91,6 +91,7 @@ export class ProjectDocument implements vscode.CustomDocument {
     private _projectNode: ProjectNode | null;
     private _diagramEditorProvider: DiagramEditorProvider;
     private commandManager: CommandManager;
+    private msgClient: MessageClient;
     
 
     private constructor(uri: vscode.Uri, diagramEditorProvider: DiagramEditorProvider) {
@@ -98,6 +99,7 @@ export class ProjectDocument implements vscode.CustomDocument {
         this._projectNode = null;
         this._diagramEditorProvider = diagramEditorProvider;
         this.commandManager = new CommandManager(this);
+        this.msgClient = new MessageClient();
     }
 
     get uri(): vscode.Uri {
@@ -123,11 +125,13 @@ export class ProjectDocument implements vscode.CustomDocument {
 
     public undo(): void {
         this.commandManager!.undo();
+        this.msgClient.publish("onUndoRedo", { doc: this, undo: true });
     }
 
 
     public redo(): void {
         this.commandManager!.redo();
+        this.msgClient.publish("onUndoRedo", { doc: this, undo: false });
     }
 
 
