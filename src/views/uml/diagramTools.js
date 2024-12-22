@@ -516,7 +516,7 @@ export class ActorToolBox {
         this.removeButton = new joint.elementTools.Remove({
             focusOpacity: 0.5,
             rotate: true,
-            x: '0%',
+            x: '50%',
             y: '0%',
             offset: { x: 0, y: 0 },
             action: function(evt, elementView, toolView) {
