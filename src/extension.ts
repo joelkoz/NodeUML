@@ -97,6 +97,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     context.subscriptions.push(
+        vscode.commands.registerCommand('nodeuml.addToDiagram', (node) => {
+            const cmdAddToDiagram = new cmd.AddToDiagram(node, {});
+            openProjects.currentProjectDoc!.exec(cmdAddToDiagram);})
+    );
+
+    context.subscriptions.push(
         vscode.commands.registerCommand('nodeuml.removeById', (metaId) => {
             let removeNode = openProjects.findNodeById(metaId);
             if (removeNode) {

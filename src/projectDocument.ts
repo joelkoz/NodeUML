@@ -3,10 +3,13 @@ import { ProjectNode, AbstractNode } from './metaModel';
 import { MessageClient } from './messageBus';
 import { CommandManager, ICommand } from './commands/commandManager';
 import { DiagramEditorProvider } from './views/diagramEditorProvider';
+import { DiagramEditor } from './views/diagramEditor';
 
 class OpenProjects {
 
     private readonly _projects: Map<string, ProjectDocument> = new Map();
+    private readonly _editors: Map<vscode.WebviewPanel, DiagramEditor> = new Map();
+
     private messageClient: MessageClient = new MessageClient();
 
     /**
@@ -16,6 +19,23 @@ class OpenProjects {
      */
     get currentProject(): ProjectNode | null {
         return this.currentProjectDoc?.project || null;
+    }
+
+
+    public getActiveEditor(): DiagramEditor | null {
+        const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+        if (activeTab?.input instanceof vscode.TabInputCustom && activeTab.input.viewType === 'nodeuml.umlDiagramEditor') {
+            for (const [panel, editor] of this._editors) {
+                // There can only be one active tab at a time. If we know that the active tab is one of our
+                // UML diagram editors (which is true based on above checks), then if we search thru our
+                // webview panels and find the one panel that is active, then THAT is THE one and only
+                // active editor instance.
+                if (panel.viewColumn !== undefined && panel.active) {
+                    return editor; 
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -53,6 +73,14 @@ class OpenProjects {
             this._projects.delete(doc.uri.path);
         }    
     }
+
+    public addEditor(panel: vscode.WebviewPanel, editor: DiagramEditor): void {
+        this._editors.set(panel, editor);
+    }
+    
+    public removeEditor(panel: vscode.WebviewPanel): void {
+        this._editors.delete(panel);
+    }
 }
 
 export const openProjects = new OpenProjects();
@@ -80,7 +108,7 @@ export class ProjectDocument implements vscode.CustomDocument {
         return this._projectNode!;
     }
 
-    get diagramEditorprovider(): DiagramEditorProvider {
+    get diagramEditorProvider(): DiagramEditorProvider {
         return this._diagramEditorProvider;
     }
 

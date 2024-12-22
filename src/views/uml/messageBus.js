@@ -3,6 +3,7 @@
  */
 
 import { graph } from './diagramEditor.js';
+import { createMetaShape } from './diagramEditor.js';
 
 export class VSCMessageClient {
     constructor(vscode) {
@@ -139,6 +140,12 @@ export class RPCServerDiagramPanel extends RPCServer {
     getDiagramJson() {
         return graph.toJSON();
     }
+
+    addShape(jsonMeta) {
+        const shape = createMetaShape(jsonMeta, {});
+        return shape?.id;
+    }
+
  }
  export const rpcServer = new RPCServerDiagramPanel(vscode);
  

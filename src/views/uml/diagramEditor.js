@@ -339,7 +339,7 @@ const shapeFactory = new Map();
 shapeFactory.set('UMLClass', {
     create: (classNode, opts) => {
               const umlClass = new joint.shapes.custom.UMLClass({
-                    position: { x: opts?.pos?.x ||30, y: opts?.pos?.y ||30 },
+                    position: { x: opts?.pos?.x || 30, y: opts?.pos?.y || 30 },
                     metaId: classNode._id
               });
               umlClass.metaToProps(classNode);
@@ -524,6 +524,7 @@ export function createMetaShape(jsonMeta, opts) {
            graph.addCell(shape);
            msgClient.publish('onDiagramDirty', { cellId: shape.id });
         }
+        return shape;
    } 
 }
 
@@ -565,6 +566,18 @@ msgClient.subscribe('onRemoveMeta', (metaId) => {
    });
 }); 
 
+
+
+msgClient.subscribe('onRemoveShape', (shapeId) => {
+    console.log(`onRemoveShape: ${shapeId}`);
+    const shape = graph.getCell(shapeId);
+    if (shape) {
+        shape.remove();
+        shapeCache.removeShapeId(shapeId);
+        msgClient.publish('onDiagramDirty', { });
+    }
+}); 
+ 
 
 msgClient.subscribe('onUndo', (payload) => {
     const fn = UndoFunctions['undo_' + payload.op];

@@ -53,6 +53,13 @@ export class DiagramEditorProvider implements vscode.CustomEditorProvider<Projec
             document
         );
 
+        // Keep the openProjects singleton up to date
+        openProjects.addEditor(webviewPanel, editor);
+
+        webviewPanel.onDidDispose(() => {
+            openProjects.removeEditor(webviewPanel);
+        });        
+
         // If you need to notify the provider of changes from the editor, you can pass callbacks.
         // For example, if the editor makes a change not from the document’s perspective:
         // editor.onDidChangeSomething(() => {

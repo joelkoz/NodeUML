@@ -171,16 +171,25 @@
         "title": "Actor",
         "when": false
       },
+      
       {
         "command": "nodeuml.updateProperty",
         "title": "Update Property",
         "when": false
       },
+
       {
         "command": "nodeuml.removeNode",
         "title": "Remove",
         "when": false
       },
+      {
+        "command": "nodeuml.addToDiagram",
+        "title": "Add to diagram",
+        "when": false
+      },
+
+
       {
         "command": "nodeuml.removeById",
         "title": "Remove element by meta Id",
@@ -244,6 +253,12 @@
           "label": "Remove Element",
           "group": "umlTools",
           "when": "view == modelExplorer && (viewItem =~ /UML.*/ || viewItem == Profiles)"
+        },
+        {
+          "command": "nodeuml.addToDiagram",
+          "label": "Add to diagram",
+          "group": "umlTools",
+          "when": "view == modelExplorer && (viewItem == UMLClass || viewItem == UMLActor)"
         },
         {
           "command": "nodeuml.generateCodeFromMenu",

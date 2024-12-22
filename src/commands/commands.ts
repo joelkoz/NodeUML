@@ -1,6 +1,6 @@
 import { ICommand } from "./commandManager";
 import * as meta from '../metaModel';
-import { ProjectDocument } from '../projectDocument';
+import { openProjects, ProjectDocument } from '../projectDocument';
 import { MessageClient, PLWVUndoRedo } from "../messageBus";
 import * as utils from "../utils";
 import { DiagramEditor } from "../views/diagramEditor";
@@ -214,6 +214,54 @@ export class RemoveElement implements ICommand {
         }
     }
 }
+
+
+
+export class AddToDiagram implements ICommand {
+
+    private jsonMeta: JsonMetaElement;
+    private shapeId: string | null;
+    private opts: object;
+
+    constructor(element: meta.MetaElementNode, opts: object) {
+        this.jsonMeta = element.toJSON(true);
+        this.opts = opts;
+        this.shapeId = null;
+    }
+
+    get label(): string {
+        return `Add ${this.jsonMeta.name} to diagram`;
+    }
+
+
+    async execute(doc: ProjectDocument): Promise<void> {
+        const activeEditor = openProjects.getActiveEditor();
+        if (activeEditor) {
+            this.shapeId = await activeEditor.diagramAddShape(this.jsonMeta);
+        }
+        else {
+            console.error('AddToDiagram.execute() failed: no active editor');
+        }
+    }
+
+
+    undo(doc: ProjectDocument): void {
+        if (this.shapeId) {
+            const activeEditor = openProjects.getActiveEditor();
+            if (activeEditor) {
+                activeEditor.diagramRemoveShape(this.shapeId);
+                this.shapeId = null;
+            }
+            else {
+                console.error('AddToDiagram.execute() failed: no active editor');
+            }
+        }
+        else {
+            console.error(`AddToDiagram Undo failed: shape Id is unknown`);
+        }
+    }
+}
+
 
 
 export class UpdateProperties implements ICommand {

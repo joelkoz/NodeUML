@@ -136,6 +136,17 @@ export class DiagramEditor {
     }
 
 
+    public async diagramAddShape(jsonMeta: object): Promise<string> {
+        const shapeId = await this.rpcClient!.call('addShape', jsonMeta);
+        return shapeId as string;
+    }
+
+
+    public diagramRemoveShape(shapeId: string): void {
+        this.wvpMsgClient?.publish('onRemoveShape', shapeId);
+    }
+
+
     public async updateDiagramNode() {
         console.log('DiagramEditor: updateDiagramNode()...');
         if (this.currentDiagram) {
