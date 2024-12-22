@@ -967,6 +967,7 @@ defaults() {
                 },
                 stroke: COLOR_CONNECTING,
                 strokeWidth: 2,
+                strokeDasharray: '5,5' // Dash pattern: 5px dash, 5px gap
             }
         },
         router: {

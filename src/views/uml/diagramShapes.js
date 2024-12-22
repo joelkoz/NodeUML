@@ -291,7 +291,8 @@ export class UMLClass extends umlShapes.UMLClassBase {
                       targetMarker: {
                          'type': 'path',
                          'd': 'M 10 -5 0 0 10 5 z'
-                      }            
+                      },
+                      strokeDasharray: '5,5' // Dash pattern: 5px dash, 5px gap        
                    }
              },
              router: {
