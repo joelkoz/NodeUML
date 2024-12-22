@@ -13,6 +13,7 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
     private htmlContent: string = '';
     private jsContent: string = '';
     private jsHasListSupport: boolean = false;
+    private cssHasModelStyles: boolean = false;
 
     constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -42,6 +43,7 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
         this.htmlContent = '';
         this.jsContent = '';
         this.jsHasListSupport = false;
+        this.cssHasModelStyles = false;
 
         const config = propertyDefinitions[node._type] || [];
         config.forEach(({ property, label, controlType, options, referenceType }) => {
@@ -140,6 +142,56 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
         `;
     }
 
+    private addModelStyles() {
+        if (!this.cssHasModelStyles) {
+            this.htmlContent += `
+            <style>
+                .modal {
+                    display: none;
+                    position: fixed;
+                    z-index: 1;
+                    left: 0; 
+                    top: 5em;
+                    width: 100%; height: 100%;
+                    overflow: auto;
+                    background-color: rgba(0,0,0,0.4);
+                }
+                .modal label {
+                    margin-bottom: 5px;
+                }
+                .modal select {
+                    margin-bottom: 10px;
+                }
+                .modal button {
+                    margin-right: 5px;
+                }
+                .modal-content {
+                    background-color: var(--vscode-editor-background);
+                    margin: 15% auto;
+                    padding: 15px;
+                    border: 1px solid var(--vscode-input-border);
+                    width: 80%;
+                }
+                .close {
+                    color: var(--vscode-editor-foreground);
+                    float: right;
+                    font-size: 28px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    position: relative;
+                    top: -15px;
+                }
+    
+                input:read-only {
+                    color: grey;
+                }
+            </style>
+            `;
+            this.cssHasModelStyles = true;
+        }
+
+    }
+
     private addReferenceList(propertyName: string, label: string, referenceType: string, selectedValues: any[]) {
         const selectId = `${propertyName}Select`;
         const controlId = propertyName;
@@ -195,49 +247,7 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
         `;
     
         // Add CSS for the modal dialog (you can adjust styles as needed)
-        this.htmlContent += `
-        <style>
-            .modal {
-                display: none;
-                position: fixed;
-                z-index: 1;
-                left: 0; 
-                top: 5em;
-                width: 100%; height: 100%;
-                overflow: auto;
-                background-color: rgba(0,0,0,0.4);
-            }
-            .modal label {
-                margin-bottom: 5px;
-            }
-            .modal select {
-                margin-bottom: 10px;
-            }
-            .modal button {
-                margin-right: 5px;
-            }
-            .modal-content {
-                background-color: var(--vscode-editor-background);
-                margin: 15% auto;
-                padding: 15px;
-                border: 1px solid var(--vscode-input-border);
-                width: 80%;
-            }
-            .close {
-                color: var(--vscode-editor-foreground);
-                float: right;
-                font-size: 28px;
-                font-weight: bold;
-                cursor: pointer;
-                position: relative;
-                top: -15px;
-            }
-
-            input:read-only {
-                color: grey;
-            }
-        </style>
-        `;
+        this.addModelStyles();
     
         // JavaScript to handle modal interactions
         this.jsContent += `
@@ -377,6 +387,8 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
         </div>
         `;
     
+        this.addModelStyles();
+
         // JavaScript to handle interactions
         // Inject `tagDefinitionsObj` into the JavaScript code
         this.jsContent += `
@@ -577,7 +589,7 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
 
     private handleUpdateProperty(field: string, value: any) {
         if (this._selectedNode) {
-            console.log(`PropertiesProvider: web view sent updateProperty(${field}, ${value})...`);
+            console.log(`PropertiesProvider: web view sent updateProperty('${field}', ${JSON.stringify(value)})...`);
             // Check if value is a reference object
             vscode.commands.executeCommand('nodeuml.updateProperty', field, value);
         }
