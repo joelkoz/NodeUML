@@ -25,6 +25,20 @@ export class ModelTreeProvider implements vscode.TreeDataProvider<meta.AbstractN
         const treeItem = new vscode.TreeItem(element.name);
         treeItem.id = element._id;
         treeItem.contextValue = element._type;
+
+        if (element instanceof meta.LinkNode) {
+            // Prefix the name with the link type
+            if (element instanceof meta.AssociationNode) {
+                treeItem.label = 'Assoc:' + element.name;
+            }
+            else if (element instanceof meta.DependencyNode) {
+                treeItem.label = 'Dep:' + element.name;
+            }
+            else if (element instanceof meta.GeneralizationNode) {
+                treeItem.label = 'Gen:' + element.name;
+            }
+        }
+
         if (element instanceof meta.ProjectNode) {
             treeItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         }
