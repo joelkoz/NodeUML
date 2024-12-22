@@ -78,8 +78,8 @@
    - **Model Explorer**: Tree view of the model components.
    - **Model Properties**: Edit properties of selected elements (e.g., name, visibility, stereotypes, tags).
 3. Use the Tool Palette in the Diagram Editor to add elements:
-   - **New Class**, **New Entity**, or **New Service** tools for creating classes.
-   - **Association**, **Dependency**, or **Generalization** tools for relationships.
+   - **New Class**, **New Entity**, or **New Service** tools for creating classes. Select the tool, then click on blank space in diagram to create
+   - **Association**, **Dependency**, or **Generalization** tools for relationships. Click and hold on edge of source class. Drag mouse to edge of target class
 
 ### Adding Attributes and Operations
 - **Preferred Method**: Click the green "+" on a class in the Diagram Editor to open the Attribute/Operation Editor. Use this format:
@@ -89,9 +89,19 @@
   Example: `+age: Integer [1]`
 - **Alternative Method**: Right-click a class in the Model Explorer and select **Add Element** > **Attribute** or **Operation**.
 
-### Relationships
-- Drag relationships (e.g., Associations, Dependencies) from the Tool Palette and connect classes or actors.
-- Generalizations can be created between classes using the same method.
+### Profile definitions
+- Create additional customized data types, actors, stereotypes, and tag values by creating a new "Profile" (or adding to an existing one):
+1. Right click on "Profiles" node in Model Explorer
+2. Select "Add Element" -> "Profile"
+3. Give profile a name using Property editor
+4. Right click on new profile and select "Add Element" to add additional entries to your profile
+5. Right click on profile and select "Export profile" to save your custom profile to an external file
+6. Right click on "Profiles" node and select "Import profile" to import profiles from other projects into your current one
+
+### Additional editing features
+- Scroll the diagram view window up/down and left/right using mouse 
+- Zoom in/out by scrolling mouse wheel while holding down Cmd key (Mac) or Ctrl key (Windows)
+- Returns to normal 1:1 zoom by double clicking on blank area of diagram
 
 ### Code Generation
 1. Use the VSCode Command Palette to run **NodeUML: Configure Code Generator**. Configure the following:
