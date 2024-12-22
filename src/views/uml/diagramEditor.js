@@ -413,6 +413,7 @@ shapeFactory.set('UMLAssociation', {
                    metaId: assocNode._id,
                    sourceEnd: { 
                      metaId: assocNode.end1.node.$ref,
+                     shapeId: opts.sourceShapeId,
                      name: assocNode.end1.name,
                      multiplicity: assocNode.end1.multiplicity,
                      navigable: assocNode.end1.navigable
@@ -424,6 +425,7 @@ shapeFactory.set('UMLAssociation', {
                   },
                    targetEnd: { 
                      metaId: assocNode.end2.node.$ref,
+                     shapeId: opts.targetShapeId,
                      name: assocNode.end2.name,
                      multiplicity: assocNode.end2.multiplicity,
                      navigable: assocNode.end2.navigable
@@ -452,6 +454,7 @@ shapeFactory.set('UMLDependency', {
          metaId: depNode._id,
          sourceEnd: { 
            metaId: depNode.end1.node.$ref,
+           shapeId: opts.sourceShapeId,
            name: depNode.end1.name,
         },
         source: {
@@ -461,6 +464,7 @@ shapeFactory.set('UMLDependency', {
         },
          targetEnd: { 
            metaId: depNode.end2.node.$ref,
+           shapeId: opts.targetShapeId,
            name: depNode.end2.name,
         },
         target: {
@@ -486,6 +490,7 @@ shapeFactory.set('UMLGeneralization', {
          metaId: genNode._id,
          sourceEnd: { 
            metaId: genNode.end1.node.$ref,
+           shapeId: opts.sourceShapeId,
            name: genNode.end1.name,
         },
         source: {
@@ -495,6 +500,7 @@ shapeFactory.set('UMLGeneralization', {
         },
          targetEnd: { 
            metaId: genNode.end2.node.$ref,
+           shapeId: opts.targetShapeId,
            name: genNode.end2.name,
         },
         target: {

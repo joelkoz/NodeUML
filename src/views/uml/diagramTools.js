@@ -613,7 +613,9 @@ function createAssociation(sourceModel, sourcePos, targetModel, targetPos) {
                     } , 
                     opts: {
                         sourcePos,
-                        targetPos
+                        targetPos,
+                        sourceShapeId: sourceModel.id,
+                        targetShapeId: targetModel.id
                     }});
             });
             ActiveTool.clear();
@@ -647,7 +649,9 @@ function createDependency(sourceModel, sourcePos, targetModel, targetPos) {
                     } , 
                     opts: {
                         sourcePos,
-                        targetPos
+                        targetPos,
+                        sourceShapeId: sourceModel.id,
+                        targetShapeId: targetModel.id
                     }});
             });
             ActiveTool.clear();
@@ -680,7 +684,9 @@ function createGeneralization(sourceModel, sourcePos, targetModel, targetPos) {
                     } , 
                     opts: {
                         sourcePos,
-                        targetPos
+                        targetPos,
+                        sourceShapeId: sourceModel.id,
+                        targetShapeId: targetModel.id
                     }});
             });
             ActiveTool.clear();

@@ -334,12 +334,14 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
             labels: [],
             sourceEnd: {
                 metaId: '',
+                shapeId: '',
                 name: '',
                 multiplicity: '',
                 navigable: true,
             },
             targetEnd: {
                 metaId: '',
+                shapeId: '',
                 name: '',
                 multiplicity: '',
                 navigable: true,
@@ -402,7 +404,10 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
        const sourceEnd = this.get('sourceEnd');
 
        if (sourceEnd && sourceEnd.metaId) {
-           const shapeId = this.resolveShapeId(sourceEnd.metaId);
+           let shapeId = sourceEnd.shapeId;
+           if (!shapeId) {
+               shapeId = this.resolveShapeId(sourceEnd.metaId);
+           }
            if (shapeId) {
                this.prop('source', { id: shapeId });
                const linkOnRight = (this.source().anchor.args.dx === "100%" || this.source().anchor.args.dy === "0%");
@@ -459,7 +464,10 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
        const targetEnd = this.get('targetEnd');
 
        if (targetEnd && targetEnd.metaId) {
-           const shapeId = this.resolveShapeId(targetEnd.metaId);
+           let shapeId = targetEnd.shapeId;
+           if (!shapeId) {
+               shapeId = this.resolveShapeId(targetEnd.metaId);
+           }
            if (shapeId) {
                this.prop('target', { id: shapeId });
                const linkOnRight = (this.target().anchor.args.dx === "100%" || this.target().anchor.args.dy === "0%");
