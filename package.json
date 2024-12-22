@@ -204,7 +204,15 @@
         "command": "nodeuml.updateMetaProperties",
         "title": "Updates one or more properties on a meta element",
         "when": false
-      }
+      },
+      {
+        "command": "nodeuml.exportProfile",
+        "title": "Export profile"
+      },
+      {
+        "command": "nodeuml.importProfile",
+        "title": "Import profile"
+      }      
     ],
     "keybindings": [
       {
@@ -265,7 +273,19 @@
           "label": "Generate code",
           "group": "umlTools",
           "when": "view == modelExplorer && (viewItem == UMLModel || viewItem == Project)"
-        }
+        },
+        {
+          "command": "nodeuml.exportProfile",
+          "label": "Export profile",
+          "group": "umlTools",
+          "when": "view == modelExplorer && viewItem == UMLProfile"
+        },
+        {
+          "command": "nodeuml.importProfile",
+          "label": "Import profile",
+          "group": "umlTools",
+          "when": "view == modelExplorer && viewItem == Profiles"
+        }        
       ],
       "uml.addElement": [
         {

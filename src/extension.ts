@@ -295,4 +295,38 @@ console.log('nodeuml.activate: ModelTreeProvider selection changed');
         })
     );    
 
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('nodeuml.exportProfile', async (node: meta.ProfileNode) => {
+            const saveUri = await vscode.window.showSaveDialog({
+                filters: { 'UML Profile': ['numl-profile'] },
+                saveLabel: 'Export'
+            });
+            if (!saveUri) { return; }
+                const profileJson = JSON.stringify(node.toJSON(), null, 2);
+                await vscode.workspace.fs.writeFile(saveUri, Buffer.from(profileJson, 'utf8'));
+                vscode.window.showInformationMessage(`Exported profile "${node.name}" to ${saveUri.fsPath}`);
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('nodeuml.importProfile', async (rootNode: meta.ProfileRootNode) => {
+            const openUris = await vscode.window.showOpenDialog({
+                filters: { 'UML Profile': ['numl-profile'] },
+                canSelectMany: false,
+                openLabel: 'Import'
+            });
+            if (!openUris || openUris.length === 0) { return; }
+    
+            const fileData = await vscode.workspace.fs.readFile(openUris[0]);
+            const jsonObj = JSON.parse(fileData.toString());
+            const importedProfile = meta.ProfileNode.fromJSON(jsonObj, openProjects.currentProject?.refCache!);
+            if (importedProfile) {
+                const parentNode = openProjects.currentProject!.profiles;
+                const cmdImportProfile = new cmd.AddElement(parentNode, importedProfile, {});
+                openProjects.currentProjectDoc!.exec(cmdImportProfile);
+            }
+        })
+    );
+
 }
