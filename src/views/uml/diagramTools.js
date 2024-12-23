@@ -896,7 +896,7 @@ const commandPalette = new CommandPalette({
             svg: icons.svgAdmin,
             exec() {
                 ActiveTool.clear();
-                ActiveTool.onPaperClick = addActorOnClickWithName('AdminRole');
+                ActiveTool.onPaperClick = addActorOnClickWithName('Admin');
                 commandPalette.setActiveTool(icons.svgAdmin);
             },
         },

@@ -89,7 +89,7 @@ const svgAdmin = `
   <line x1="40" y1="32" x2="33" y2="45" stroke="black" stroke-width="2"/>
   <line x1="40" y1="32" x2="47" y2="45" stroke="black" stroke-width="2"/>
   <text x="40" y="55" font-family="Arial" font-size="11" text-anchor="middle" fill="black">
-    Admin Role
+    Admin
   </text>
 `;
 
