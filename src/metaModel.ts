@@ -316,38 +316,60 @@ export class ProjectNode extends AbstractNode {
         project.model.addChild(new ClassDiagramNode('Class Diagram'));
 
         const profDataTypes = project.profiles.addProfile(new ProfileNode('Data Types'));
-        const pkgPrimatives = profDataTypes.addChild(new PackageNode('Primatives'));
-        pkgPrimatives.addChild(new DataTypeNode('void'));
-        pkgPrimatives.addChild(new DataTypeNode('String'));
-        pkgPrimatives.addChild(new DataTypeNode('Number'));
-        pkgPrimatives.addChild(new DataTypeNode('Boolean'));
-        pkgPrimatives.addChild(new DataTypeNode('Text'));
+            const pkgPrimatives = profDataTypes.addChild(new PackageNode('Primatives'));
+                pkgPrimatives.addChild(new DataTypeNode('void'));
+                pkgPrimatives.addChild(new DataTypeNode('String'));
+                const number = pkgPrimatives.addChild(new DataTypeNode('Number'));
+                    number.addTagValue('minVal', '-999999999.9999');
+                    number.addTagValue('maxVal', '999999999.9999');
+                pkgPrimatives.addChild(new DataTypeNode('Boolean'));
+                pkgPrimatives.addChild(new DataTypeNode('Text'));
 
-        const pkgDateTime = profDataTypes.addChild(new PackageNode('Date and time'));
-        pkgDateTime.addChild(new DataTypeNode('DateTime'));
-        pkgDateTime.addChild(new DataTypeNode('Date'));
-        pkgDateTime.addChild(new DataTypeNode('Time'));
+            const pkgDateTime = profDataTypes.addChild(new PackageNode('Date and time'));
+                pkgDateTime.addChild(new DataTypeNode('DateTime'));
+                pkgDateTime.addChild(new DataTypeNode('Date'));
+                pkgDateTime.addChild(new DataTypeNode('Time'));
 
-        const pkgNumeric = profDataTypes.addChild(new PackageNode('Precision numbers'));
-        pkgNumeric.addChild(new DataTypeNode('Integer'));
-        pkgNumeric.addChild(new DataTypeNode('Decimal'));
-        pkgNumeric.addChild(new DataTypeNode('Currency'));
+            const pkgNumeric = profDataTypes.addChild(new PackageNode('Precision numbers'));
+                const integer = pkgNumeric.addChild(new DataTypeNode('Integer'));
+                    integer.addTagValue('minVal', '-999999999');
+                    integer.addTagValue('maxVal', '999999999');
+                const decimal = pkgNumeric.addChild(new DataTypeNode('Decimal'));
+                    decimal.addTagValue('minVal', '-999999999.9999');
+                    decimal.addTagValue('maxVal', '999999999.9999');
+                const currency = pkgNumeric.addChild(new DataTypeNode('Currency'));
+                    currency.addTagValue('minVal', '-999999999.99');
+                    currency.addTagValue('maxVal', '999999999.99');
 
-        const pkgTech = profDataTypes.addChild(new PackageNode('Technology'));
-        pkgTech.addChild(new DataTypeNode('Password'));
-        pkgTech.addChild(new DataTypeNode('Email'));
-        pkgTech.addChild(new DataTypeNode('Url'));
+            const pkgTech = profDataTypes.addChild(new PackageNode('Technology'));
+                pkgTech.addChild(new DataTypeNode('Password'));
+                pkgTech.addChild(new DataTypeNode('Email'));
+                pkgTech.addChild(new DataTypeNode('Url'));
 
-        const profStereo = project.profiles.addProfile(new ProfileNode('Stereotypes'));
-        profStereo.addChild(new StereotypeNode('Entity'));
-        profStereo.addChild(new StereotypeNode('Service'));
-        profStereo.addChild(new StereotypeNode('Enumeration'));
-        profStereo.addChild(new StereotypeNode('POJO'));
 
-        const profActors = project.profiles.addProfile(new ProfileNode('Actors'));
-        profActors.addChild(new ActorNode('User'));
-        profActors.addChild(new ActorNode('System'));
-        profActors.addChild(new ActorNode('AdminRole'));
+        const profKoaReact = project.profiles.addProfile(new ProfileNode('Koa-React'));
+            const pkgStereo = profKoaReact.addChild(new PackageNode('Stereotypes'));
+                pkgStereo.addChild(new StereotypeNode('Entity'));
+                pkgStereo.addChild(new StereotypeNode('Enumeration'));
+                pkgStereo.addChild(new StereotypeNode('POJO'));
+                pkgStereo.addChild(new StereotypeNode('Service'));
+
+            const pkgActors = profKoaReact.addChild(new PackageNode('Security'));
+                pkgActors.addChild(new ActorNode('User'));
+                pkgActors.addChild(new ActorNode('Admin'));
+                pkgActors.addChild(new ActorNode('Guest'));
+
+            const pkgTags = profKoaReact.addChild(new PackageNode('Special tags'));        
+                const pkgTagEntity = pkgTags.addChild(new PackageNode('For Entities'));
+                    pkgTagEntity.addChild(new TagNode('noUI', 'true'));
+                    pkgTagEntity.addChild(new TagNode('noREST', 'true'));
+                const pkgTagAttributes = pkgTags.addChild(new PackageNode('For attributes'));
+                    pkgTagAttributes.addChild(new TagNode('uiTableColumn', 'true'));
+                    pkgTagAttributes.addChild(new TagNode('unique', 'true'));
+                    pkgTagAttributes.addChild(new TagNode('dbIndex', 'true'));
+                const pkgTagDep = pkgTags.addChild(new PackageNode('For Dependencies'));
+                    pkgTagDep.addChild(new TagNode('permissions', 'own,read,write,del'));
+
         return project;        
     }
 
