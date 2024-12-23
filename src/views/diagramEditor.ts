@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { MessageClient, WVPMessageClient, PLUpdateMetaProperties, PLWVDiagramDirty, PLMetaModelChange, PLCreateNewMeta, PLWVUndoRedo } from '../messageBus';
+import { MessageClient, WVPMessageClient, PLUpdateMetaProperties, PLWVDiagramDirty, PLMetaModelChange, PLCreateNewMeta, PLWVUndoRedo, PLWVAddToDiagram } from '../messageBus';
 import * as meta from '../metaModel';
 import { ProjectDocument } from '../projectDocument';
 import { RPCServer, RPCClient } from './rpc';
@@ -125,6 +125,13 @@ export class DiagramEditor {
             console.log('DiagramEditor: panel sent cmdAddUndoRedo');
             this._projectDocument.exec(new cmd.DiagramUndoRedo(this, payload));
         });
+
+        this.wvpMsgClient!.subscribe('cmdAddToDiagram', (payload: PLWVAddToDiagram) => {
+            const node = this.project?.findById(payload.metaId);
+            if (node) {
+                vscode.commands.executeCommand('nodeuml.addToDiagram', node, payload.opts);
+            }
+        });
     }
 
     public diagramUndo(payload: PLWVUndoRedo): void {
@@ -136,8 +143,8 @@ export class DiagramEditor {
     }
 
 
-    public async diagramAddShape(jsonMeta: object): Promise<string> {
-        const shapeId = await this.rpcClient!.call('addShape', jsonMeta);
+    public async diagramAddShape(jsonMeta: object, opts: object): Promise<string> {
+        const shapeId = await this.rpcClient!.call('addShape', { jsonMeta, opts });
         return shapeId as string;
     }
 

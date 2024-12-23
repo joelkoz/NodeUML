@@ -292,7 +292,7 @@ export class AddToDiagram implements ICommand {
     async execute(doc: ProjectDocument): Promise<void> {
         const activeEditor = openProjects.getActiveEditor();
         if (activeEditor) {
-            this.shapeId = await activeEditor.diagramAddShape(this.jsonMeta);
+            this.shapeId = await activeEditor.diagramAddShape(this.jsonMeta, this.opts);
         }
         else {
             console.error('AddToDiagram.execute() failed: no active editor');

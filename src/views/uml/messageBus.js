@@ -141,8 +141,9 @@ export class RPCServerDiagramPanel extends RPCServer {
         return graph.toJSON();
     }
 
-    addShape(jsonMeta) {
-        const shape = createMetaShape(jsonMeta, {});
+    addShape(payload) {
+        const { jsonMeta, opts } = payload;
+        const shape = createMetaShape(jsonMeta, opts);
         return shape?.id;
     }
 

@@ -721,7 +721,7 @@ function addActorOnClickWithName(actorName) {
         metaModel.findActor(actorName)
         .then((actor) => {
             if (actor) {
-                createMetaShape(actor, { pos: clickPos });
+                msgClient.publish('cmdAddToDiagram', { metaId: actor._id, opts: { pos: clickPos }});
             }
             else {
                 console.error(`Could not find actor ${actorName} in model. Ignoring request.`);

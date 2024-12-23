@@ -91,6 +91,11 @@ export interface PLWVMetaModelChange {
     opts: any;
 }
 
+export interface PLWVAddToDiagram {
+    metaId: string;
+    opts: any;
+}
+
 
 export interface PLWVUndoRedo {
     label: string;
@@ -117,6 +122,7 @@ interface IWebviewMessages extends ICommonMessages {
    "onUndo": PLWVUndoRedo;
    "onRedo": PLWVUndoRedo;
    "onRemoveShape": string;
+   "cmdAddToDiagram": PLWVAddToDiagram;
 }
 
 

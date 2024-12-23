@@ -98,8 +98,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('nodeuml.addToDiagram', (node) => {
-            const cmdAddToDiagram = new cmd.AddToDiagram(node, {});
+        vscode.commands.registerCommand('nodeuml.addToDiagram', (node, opts = {}) => {
+            const cmdAddToDiagram = new cmd.AddToDiagram(node, opts);
             openProjects.currentProjectDoc!.exec(cmdAddToDiagram);})
     );
 
