@@ -542,6 +542,10 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
     }
 
     private getHtmlForNode(): string {
+        let editorType = '';
+        if (this._selectedNode) {
+            editorType = this._selectedNode._type.slice(3);
+        }
         return `
             <html>
                 <head>
@@ -573,7 +577,7 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
                     </style>                
                 </head>
                 <body>
-                    <h3>Edit Properties</h3>
+                    <h3>${editorType} Properties</h3>
                     <form>
                         ${this.htmlContent}
                     </form>
