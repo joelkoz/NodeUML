@@ -346,6 +346,9 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
                 multiplicity: '',
                 navigable: true,
             },
+            middleEnd: {
+                name: ''
+            },
             attrs: {
                 'line': {
                     sourceMarker: {
@@ -366,7 +369,7 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
 
     initialize(...args) {
         super.initialize(...args);
-        this.on('change:sourceEnd change:targetEnd', function() {
+        this.on('change:sourceEnd change:targetEnd change:middleEnd', function() {
             this.refreshLabels();
         }, this);
 
@@ -402,8 +405,7 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
     updateLabels() {
        const labels = [];
        const sourceEnd = this.get('sourceEnd');
-
-       if (sourceEnd && sourceEnd.metaId) {
+        if (sourceEnd && sourceEnd.metaId) {
            let shapeId = sourceEnd.shapeId;
            if (!shapeId) {
                shapeId = this.resolveShapeId(sourceEnd.metaId);
@@ -462,7 +464,6 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
        }
 
        const targetEnd = this.get('targetEnd');
-
        if (targetEnd && targetEnd.metaId) {
            let shapeId = targetEnd.shapeId;
            if (!shapeId) {
@@ -519,6 +520,30 @@ export class UMLLinkBase extends joint.shapes.standard.Link {
                }
            }
        }
+
+       const middleEnd = this.get('middleEnd');
+       if (middleEnd?.name) {
+            labels.push({
+                'attrs': {
+                    'text': {
+                        'text': middleEnd.name,
+                        'fill': 'black',
+                        'font-size': 14, 
+                        'font-family': 'Courier New'
+                    },
+                    'rect': {
+                        'stroke': 'black',
+                        'fill': 'none',
+                        'strokeWidth': 0
+                    }
+                },
+                'position': {
+                    'distance': 0.5,
+                    'args': { 'ensureLegibility': true }
+                }
+            });
+       }
+    
 
        this.set('labels', labels);
     }

@@ -229,6 +229,13 @@ export class UMLClass extends umlShapes.UMLClassBase {
              this.prop('targetEnd/name', '');
              this.prop('targetEnd/multiplicity', '');
          }
+
+         // Tag values are middle label
+         if (linkNode.tags.length > 0) {
+            let tagValues = linkNode.tags.map((tag) => `${tag.name} = ${tag.value}`).join('\n');
+            this.prop('middleEnd/name', tagValues);
+         }
+
        }
     }
  }
