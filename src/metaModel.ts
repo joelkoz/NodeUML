@@ -347,7 +347,7 @@ export class ProjectNode extends AbstractNode {
                 pkgTech.addChild(new DataTypeNode('Url'));
 
 
-        const profKoaReact = project.profiles.addProfile(new ProfileNode('Koa-React'));
+        const profKoaReact = project.profiles.addProfile(new ProfileNode('NodeMDA'));
             const pkgStereo = profKoaReact.addChild(new PackageNode('Stereotypes'));
                 pkgStereo.addChild(new StereotypeNode('Entity'));
                 pkgStereo.addChild(new StereotypeNode('Enumeration'));
