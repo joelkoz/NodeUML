@@ -25,11 +25,11 @@ export class OperationEditor extends ClassEditorBase {
       const params = op.ownedElements
         .filter((el) => el._type === "UMLParameter" && el.direction === 0)
         .map((param) => {
-          const paramType = param.type ? param.type.name : "void";
+          const paramType = param?.type?.className || param?.type?.name ||'void';
           return `${param.name}: ${paramType}`;
         })
         .join(", ");
-      const returnType = op.returnType ? op.returnType.name : "void";
+      const returnType = op?.type?.className || op?.type?.name ||'void';
       return `${visibility}${name}(${params}): ${returnType}`;
     }
   

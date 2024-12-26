@@ -119,8 +119,9 @@ export class UMLClass extends umlShapes.UMLClassBase {
              if (element._type === 'UMLAttribute') {
                  const attrib = element;
                  const viz = attrib?.visibility === 'private' ? '-' : attrib?.visibility === 'protected' ? '#' : '+';
+                 const typeName = attrib?.type?.className || attrib?.type?.name || '';
                  const strAttrib = 
-                    `${viz}${attrib?.name}: ${attrib?.type?.name || ''} ${attrib?.multiplicity !== '0..1' ? '['+attrib?.multiplicity+']' : ''}`;
+                    `${viz}${attrib?.name}: ${typeName} ${attrib?.multiplicity !== '0..1' ? '['+attrib?.multiplicity+']' : ''}`;
                  attribs.push(strAttrib);
              }
              else if (element._type === 'UMLOperation') {

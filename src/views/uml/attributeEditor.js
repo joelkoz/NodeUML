@@ -497,7 +497,7 @@ export class ClassEditorBase {
       };
       const visibility = visibilityMap[attr.visibility] || "+";
       const name = attr.name || "";
-      const type = attr.type ? attr.type.name : "";
+      const type = attr.type?.className || attr.type?.name || "";
       let multiplicity = attr.multiplicity;
       if (multiplicity === "0..1" || !multiplicity) {
         multiplicity = "";

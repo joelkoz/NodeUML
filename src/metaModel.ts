@@ -37,24 +37,44 @@ export class ReferenceNode {
         }
     }
 
-    static toJSON(obj: any): any {
+    static toJSON(obj: any, useClassRef: boolean = false): any {
         if (obj && obj._id) {
-            return { $ref: obj._id };
+            if (obj instanceof ClassNode && useClassRef) {
+                return { $ref: obj._id, className: obj.name };
+            }
+            else {
+                return { $ref: obj._id };
+            }
         }
     }
 
-    static fromJSON(json: any, refCache: ReferenceCache): ReferenceNode | AbstractNode |undefined {
+    static fromJSON(json: any, refCache: ReferenceCache, useClassRef: boolean = false): ReferenceNode | AbstractNode |undefined {
         if (json?.$ref) {
            const node = refCache.getReference(json.$ref);
            if (node) {
                return node;
            }
            else {
-              return new ReferenceNode(json.$ref);
+              if (json.className && useClassRef) {
+                  return new ClassReferenceNode(json.$ref, json.className);
+              }
+              else {
+                  return new ReferenceNode(json.$ref);
+              }
            }
         }
     }
 }
+
+
+export class ClassReferenceNode extends ReferenceNode {
+    public className: string;
+    constructor(id: string, className: string) {
+        super(id);
+        this.className = className;
+    }
+}
+
 
 /**
  * A base class for all items that appear in the meta model. There are a few types of
@@ -771,7 +791,7 @@ export class DataTypeNode extends MetaElementNode {
 classFactory.UMLDataType = DataTypeNode;
 
 export class AbstractVariable extends MetaElementNode {
-    type: DataTypeNode | ReferenceNode | undefined;
+    type: DataTypeNode | ClassNode | ReferenceNode | undefined;
     isReadOnly: boolean;
     multiplicity: string;
     isUnique: boolean;
@@ -791,16 +811,20 @@ export class AbstractVariable extends MetaElementNode {
     }
     
     get isObject() {
-        if (this.type instanceof DataTypeNode) {
-            return (this.type.name === "Object");
-        }
-        return false;
+        return (this.type instanceof ClassNode || this.type instanceof ClassReferenceNode);
     }
 
     toJSON(dereference: boolean | undefined = undefined): any {
+        let typeNode;
+        if (dereference && this?.type instanceof DataTypeNode) {
+            typeNode = this.type;
+        }
+        else {
+            typeNode = ReferenceNode.toJSON(this.type, true);
+        }
         return {
             ...super.toJSON(dereference),
-            "type": dereference ? this.type : ReferenceNode.toJSON(this.type),
+            "type": typeNode,
             isReadOnly: this.isReadOnly,
             isUnique: this.isUnique,
             multiplicity: this.multiplicity,
@@ -810,7 +834,7 @@ export class AbstractVariable extends MetaElementNode {
 
     static fromJSON(json: any, refCache: ReferenceCache): AbstractVariable {
         const node = new AbstractVariable(json.name, json._type);
-        node.type = ReferenceNode.fromJSON(json.type, refCache) as DataTypeNode | ReferenceNode;
+        node.type = ReferenceNode.fromJSON(json.type, refCache, true) as DataTypeNode | ClassNode | ReferenceNode;
         node.isReadOnly = json.isReadOnly || false;
         node.isUnique = json.isUnique || false;
         node.multiplicity = json.multiplicity || '0..1';

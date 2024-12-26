@@ -121,6 +121,8 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
     private addDataTypeSelect(propertyName: string, label: string, selectedValue: DataTypeNode) {
         const controlId = propertyName;
         const dataTypes = openProjects.currentProjectDoc!.project.gatherAll('UMLDataType');
+        const classDefs = openProjects.currentProjectDoc!.project.gatherAll('UMLClass');
+        dataTypes.push(...classDefs);
         this.htmlContent += `<div class="property-widget"><label for="${controlId}">${label}:</label><br/><select id="${controlId}" class="dropdown">`;
         
         dataTypes.forEach(({ node }) => {

@@ -41,6 +41,8 @@ export class MetaModel {
     async getDataTypes() {
         if (!this._dataTypes) {
            this._dataTypes = await this.gatherAll('UMLDataType');
+           const classDefs = await this.gatherAll('UMLClass');
+           this._dataTypes.push(...classDefs);
         }
         return this._dataTypes;
     }
