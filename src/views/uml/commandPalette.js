@@ -257,9 +257,20 @@ export class CommandPalette {
       this.paletteMinimized.style.visibility = 'hidden';
       // Show expanded content by adding 'active' class
       this.paletteExpanded.classList.add('active');
+      this.ignoreCollapse = true;
+      const obj = this;
+      setTimeout(() => {
+         obj.ignoreCollapse = false;
+      }, 600);
   }
 
   collapsePalette() {
+      if (this.ignoreCollapse) {
+        // palette has not had time to fully open. to Prevent rendering
+        // issues, ignore this one.
+        return;
+      }
+
       // Show minimized content
       this.paletteMinimized.style.visibility = 'visible';
       // Hide expanded content by removing 'active' class
