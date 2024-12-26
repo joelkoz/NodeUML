@@ -602,12 +602,11 @@ function createAssociation(sourceModel, sourcePos, targetModel, targetPos) {
                         name: `${sourceModel.attributes.name}To${targetModel.attributes.name}`,
                         _type: 'UMLAssociation',
                         end1: {
-                            navigable: false,
+                            navigable: true,
                             node: { $ref: sourceModel.attributes.metaId }
                         },
                         end2: {
                             navigable: true,
-                            multiplicity: '0..*',
                             node: { $ref: targetModel.attributes.metaId }
                         }
                     } , 
