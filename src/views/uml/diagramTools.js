@@ -118,7 +118,8 @@ export class ClassToolBox {
                 activeClassEditor.setModel(jsonClass);
 
                 const editorDivWidth = 441; // Width of the DIV
-                const paperWidth = classView.paper.el.clientWidth; // Get the display width of the paper's body
+                const scrollContainer = document.getElementById('scroll-container');
+                const paperWidth = scrollContainer.offsetWidth;
 
                 // Get the bounding box of the shape
                 const bbox = classView.getBBox();
@@ -209,7 +210,8 @@ export class ClassToolBox {
                 activeClassEditor.setModel(jsonClass);
 
                 const editorDivWidth = 441; // Width of the DIV
-                const paperWidth = classView.paper.el.clientWidth; // Get the display width of the paper's body
+                const scrollContainer = document.getElementById('scroll-container');
+                const paperWidth = scrollContainer.offsetWidth;
 
                 // Get the bounding box of the shape
                 const bbox = classView.getBBox();
