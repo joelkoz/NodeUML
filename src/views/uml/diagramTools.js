@@ -78,6 +78,7 @@ async function getOperationJson(jsonOperation, classMetaId) {
         params.push({
             _type: 'UMLParameter',
             name: param.name,
+            multiplicity: param.multiplicity,
             type: { $ref: await getDataTypeIdByName(param.type.name, dtCache) }
         });  
     }

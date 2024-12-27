@@ -26,7 +26,14 @@ export class OperationEditor extends ClassEditorBase {
         .filter((el) => el._type === "UMLParameter" && el.direction === 0)
         .map((param) => {
           const paramType = param?.type?.className || param?.type?.name ||'void';
-          return `${param.name}: ${paramType}`;
+          let multiplicity = param.multiplicity || "";
+          if (multiplicity && multiplicity !== "0..1") {
+              multiplicity = ` [${multiplicity}]`;
+          }
+          else {
+            multiplicity = "";
+          }
+          return `${param.name}: ${paramType}${multiplicity}`;
         })
         .join(", ");
       const returnType = op?.type?.className || op?.type?.name ||'void';
@@ -61,8 +68,8 @@ export class OperationEditor extends ClassEditorBase {
         const paramsArray = paramsString.split(",");
         for (let paramStr of paramsArray) {
           const paramMatch = paramStr
-            .trim()
-            .match(/^([a-zA-Z][a-zA-Z0-9]*)\s*:\s*([a-zA-Z][a-zA-Z0-9]*)$/);
+              .trim()
+              .match(/^([a-zA-Z][a-zA-Z0-9]*)\s*:\s*([a-zA-Z][a-zA-Z0-9]*)(\s*\[(\d+|\d+\.\.\d+|\d+\.\.\*)\])?$/);
           if (!paramMatch) {
             return null;
           }
@@ -71,10 +78,10 @@ export class OperationEditor extends ClassEditorBase {
             name: paramMatch[1],
             type: { name: paramMatch[2] },
             direction: 0,
+            multiplicity: paramMatch[4] || "0..1",
           });
         }
       }
-  
       return {
         visibility,
         name,
