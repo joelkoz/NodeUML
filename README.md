@@ -74,12 +74,16 @@
 
 ### Editing a Model
 1. Open a `.numl` file to access the Diagram Editor.
+
 2. Expand the **UML Tools** icon in the Activity Bar to view:
    - **Model Explorer**: Tree view of the model components.
    - **Model Properties**: Edit properties of selected elements (e.g., name, visibility, stereotypes, tags).
-3. Use the Tool Palette in the Diagram Editor to add elements:
-   - **New Class**, **New Entity**, or **New Service** tools for creating classes. Select the tool, then click on blank space in diagram to create
-   - **Association**, **Dependency**, or **Generalization** tools for relationships. Click and hold on edge of source class. Drag mouse to edge of target class
+   
+3. New elements can be added via the Diagram Editor OR a right-click anywhere on the `Model Explorer` tree view.
+   - Use the Tool Palette in the Diagram Editor to add elements:
+      - **New Class**, **New Entity**, or **New Service** tools for creating classes. Select the tool, then click on blank space in diagram to create
+      - **Association**, **Dependency**, or **Generalization** tools for relationships. Click and hold on edge of source class. Drag mouse to edge of target class
+   - **Alternative Method**: Right-click on the model or a package node in the Model Explorer and select **Add Element** > **Class**
 
 ### Adding Attributes and Operations
 - **Preferred Method**: Click the green "+" on a class in the Diagram Editor to open the Attribute/Operation Editor. Use this format:
@@ -102,6 +106,7 @@
 - Scroll the diagram view window up/down and left/right using mouse 
 - Zoom in/out by scrolling mouse wheel while holding down Cmd key (Mac) or Ctrl key (Windows)
 - Returns to normal 1:1 zoom by double clicking on blank area of diagram
+- Undo/redo actions are supported using standard shortcuts (e.g., `Cmd+Z` on macOS).
 
 ### Code Generation
 1. Use the VSCode Command Palette to run **NodeUML: Configure Code Generator**. Configure the following:
@@ -122,8 +127,6 @@
 
 ## Development Notes
 
-- New elements can be added via the Diagram Editor or the `Model Explorer` tree view.
-- Undo/redo actions are supported using standard shortcuts (e.g., `Cmd+Z` on macOS).
 - `.numl` files store UML models as JSON and are fully compatible with NodeMDA.
 
 ---
