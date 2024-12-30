@@ -1,5 +1,7 @@
 import { AttributeEditor } from "./attributeEditor.js";
 import { OperationEditor } from "./operationEditor.js";
+import { ClassDefEditor } from "./classDefEditor.js";
+
 import { CommandPalette, icons } from "./commandPalette.js";
 import { verticalPusherTool, horizontalPusherTool, createMetaShape } from "./diagramEditor.js";
 import { metaModel } from "./metaModel.js";
@@ -105,6 +107,96 @@ export class ClassToolBox {
             padding: 20,
             useModelGeometry: true
         });
+
+        this.classDefEditorTool = new joint.elementTools.Button({
+            x: '35%',
+            y: '10%',
+            magnet: 'body',
+            scale: 1.5,
+            action: async function(evt, classView, tool) {
+
+                activeClassEditor = new ClassDefEditor();
+                const jsonClass = await metaModel.findId(classView.model.attributes.metaId);
+                activeClassEditor.setModel(jsonClass);
+
+                const editorDivWidth = 441; // Width of the DIV
+                const scrollContainer = document.getElementById('scroll-container');
+                const paperWidth = scrollContainer.offsetWidth;
+
+                // Get the bounding box of the shape
+                const bbox = classView.getBBox();
+
+                // Absolute positions of the shape
+                const classTopRight = classView.paper.localToPagePoint(bbox.x + bbox.width, bbox.y);
+                const classTopLeft = classView.paper.localToPagePoint(bbox.x, bbox.y);
+
+                // Check if the DIV fits to the right
+                if (classTopRight.x + editorDivWidth <= paperWidth) {
+                    // Position the DIV to the right
+                    activeClassEditor.setPosition(classTopRight.x+1, classTopRight.y+20);
+                } else {
+                    // Position the DIV to the left
+                    let x = classTopLeft.x - editorDivWidth-2;
+                    if (x < 0) { x = 0; }
+                    activeClassEditor.setPosition(x, classTopRight.y+20);
+                }
+
+                // Handle meta modification events
+                const classMetaId = jsonClass._id;
+
+                activeClassEditor.onNameChange = async function(newName) {
+                    msgClient.publish('cmdUpdateMetaProperties', { 
+                        metaId: classMetaId,
+                        updates: [
+                            { propName: 'name', value: newName }
+                        ]
+                    });
+                };
+
+                activeClassEditor.onStereotypeChange = async function(newStereotype) {
+                    let newValue;
+                    if (newStereotype) {
+                        newValue = [ { $ref: newStereotype._id } ];
+                    } else {
+                        newValue = [];
+                    }
+                    msgClient.publish('cmdUpdateMetaProperties', { 
+                        metaId: classMetaId,
+                        updates: [
+                            { propName: 'stereotypes', value: newValue }
+                        ]
+                    });
+                };
+
+
+                activeClassEditor.onEditorClose = function() {
+                    activeClassEditor = null;
+                };
+
+                activeClassEditor.activate();
+            },
+            markup: [{
+                tagName: 'circle',
+                selector: 'button',
+                attributes: {
+                    'r': 7,
+                    'fill': '#5bb53f',
+                    'cursor': 'pointer'
+                }
+            }, {
+                tagName: 'path',
+                selector: 'icon',
+                attributes: {
+                    'd': 'M -4 0 L 4 0 M 0 -4 L 0 4',
+                    'fill': 'none',
+                    'stroke': '#FFFFFF',
+                    'stroke-width': 2,
+                    'pointer-events': 'none'
+                }
+            }]
+        });
+
+
 
         this.attributeEditorTool = new joint.elementTools.Button({
             x: '7%',
@@ -320,6 +412,7 @@ export class ClassToolBox {
         this.toolBox = new joint.dia.ToolsView({
             tools: [
                 this.boundaryTool, 
+                this.classDefEditorTool,
                 this.attributeEditorTool,
                 this.operationEditorTool,
                 this.removeButton
@@ -702,16 +795,16 @@ function createNewClassOnClick(stereotypeName) {
             metaModel.findStereotype(stereotypeName)
             .then((stereotype) => {
                 if (stereotype) {
-                    return msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass', stereotypes: [ { $ref: stereotype._id} ]} , opts: { pos: clickPos }});
+                    return msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass', stereotypes: [ { $ref: stereotype._id} ]} , opts: { pos: clickPos, autoEditClassDef: true }});
                 }
                 else {
                     console.error(`Could not find stereotype ${stereotypeName} in model. Creating naked class`);                
-                    return msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos }});
+                    return msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos, autoEditClassDef: true }});
                 }
             });
         }
         else {
-            msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos }});
+            msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos, autoEditClassDef: true }});
         }
         ActiveTool.clear();          
     };

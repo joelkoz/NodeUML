@@ -346,6 +346,22 @@ shapeFactory.set('UMLClass', {
               return umlClass;
     },
 
+    onAfterAddToGraph(classNode, umlClass, opts) {
+        if (opts.autoEditClassDef) {
+            const classView = paper.findViewByModel(umlClass);
+            const classTools = ClassToolBox.defaultTools; // Make sure the singleton is initialized
+            const classDefEditorTool = ClassToolBox.defaultToolBox.classDefEditorTool;
+
+            // Simulate an event
+            const mockEvent = new Event('click');
+
+            // Call the action programmatically
+            if (classDefEditorTool) {
+                classDefEditorTool.options.action(mockEvent, classView, classDefEditorTool);
+            }            
+        }
+    }, 
+
     update: (classNode) => {
         refreshClassShapes(classNode);
     },
@@ -528,6 +544,9 @@ export function createMetaShape(jsonMeta, opts) {
         if (shape) {
            shapeCache.associate(jsonMeta._id, shape.id);
            graph.addCell(shape);
+           if (factory.onAfterAddToGraph) {
+               factory.onAfterAddToGraph(jsonMeta, shape, opts);
+           }
            msgClient.publish('onDiagramDirty', { cellId: shape.id });
         }
         return shape;
