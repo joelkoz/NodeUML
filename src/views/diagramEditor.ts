@@ -164,7 +164,6 @@ export class DiagramEditor {
 
 
     public async updateDiagramNode() {
-        console.log('DiagramEditor: updateDiagramNode()...');
         if (this.currentDiagram) {
             console.log('DiagramEditor: Updating diagram.graph with JointJS json...');
             const json = await this.rpcClient!.call('getDiagramJson');
