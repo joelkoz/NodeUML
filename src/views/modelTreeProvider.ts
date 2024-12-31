@@ -24,7 +24,7 @@ export class ModelTreeProvider implements vscode.TreeDataProvider<meta.AbstractN
     getTreeItem(element: meta.AbstractNode): vscode.TreeItem {
         const treeItem = new vscode.TreeItem(element.name);
         treeItem.id = element._id;
-        treeItem.contextValue = element._type;
+        treeItem.contextValue = element._type; // used as "viewItem" in when clause of context menu
 
         if (element instanceof meta.LinkNode) {
             // Prefix the name with the link type
