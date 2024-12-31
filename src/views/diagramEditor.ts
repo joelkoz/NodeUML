@@ -64,6 +64,10 @@ export class DiagramEditor {
         return this.project?.model.diagram;
     }
 
+    public async onBeforeSave() {
+        await this.updateDiagramNode();
+    }
+
     private setupEventSubscriptions(): void {
         // Similar subscriptions as before...
         this.wvpMsgClient!.subscribe('onDiagramEditorReady', (payload) => {
@@ -115,11 +119,16 @@ export class DiagramEditor {
             vscode.commands.executeCommand('nodeuml.removeById', metaId);
         });
 
-        this.wvpMsgClient!.subscribe('onDiagramDirty', (payload: PLWVDiagramDirty) => {
-            console.log('DiagramEditor: panel sent onDiagramDirty - updating diagram graph...');
-            this.updateDiagramNode().then(() => {
-            });
-        });
+        // We are now saving the diagram node just before document is saved. This code
+        // is currently not needed, but if there is ever a use case for having the
+        // diagram node's graph entry updated in real time, this is the place to do it.
+        // Note: diagram editor web view code would have to be updated to send
+        // send the "onDiagramDirty" message in all cases - currently it does not.
+        // this.wvpMsgClient!.subscribe('onDiagramDirty', (payload: PLWVDiagramDirty) => {
+        //     console.log('DiagramEditor: panel sent onDiagramDirty - updating diagram graph...');
+        //     this.updateDiagramNode().then(() => {
+        //     });
+        // });
 
         this.wvpMsgClient!.subscribe('cmdAddUndoRedo', (payload: PLWVUndoRedo) => {
             console.log('DiagramEditor: panel sent cmdAddUndoRedo');

@@ -153,6 +153,14 @@ export class ProjectDocument implements vscode.CustomDocument {
     // Save current ProjectNode data to disk
     public async save(cancellation?: vscode.CancellationToken): Promise<void> {
         console.log(`ProjectDocument: Saving project ${this._uri.path}`);
+        // Update diagram node before saving...
+        const editor = openProjects.getActiveEditor();
+        if (editor) {
+            await editor.onBeforeSave();
+        }
+        else {
+            console.error('No active UML diagram editor - cannot update diagram node!');
+        }
         const jsonContent = JSON.stringify(this._projectNode!.toJSON(), null, 2);
         await vscode.workspace.fs.writeFile(this._uri, Buffer.from(jsonContent, 'utf8'));    
     }
@@ -160,6 +168,13 @@ export class ProjectDocument implements vscode.CustomDocument {
 
     public async saveAs(targetResource: vscode.Uri, cancellation?: vscode.CancellationToken): Promise<void> {
         console.log(`ProjectDocument: Saving project as ${targetResource.path}`);
+        const editor = openProjects.getActiveEditor();
+        if (editor) {
+            await editor.onBeforeSave();
+        }
+        else {
+            console.error('No active UML diagram editor - cannot update diagram node!');
+        }
         const jsonContent = JSON.stringify(this._projectNode!.toJSON(), null, 2);
         await vscode.workspace.fs.writeFile(targetResource, Buffer.from(jsonContent, 'utf8'));
         this._uri = targetResource;
@@ -171,6 +186,13 @@ export class ProjectDocument implements vscode.CustomDocument {
     }
 
     public async backup(context: vscode.CustomDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.CustomDocumentBackup> {
+        const editor = openProjects.getActiveEditor();
+        if (editor) {
+            await editor.onBeforeSave();
+        }
+        else {
+            console.error('No active UML diagram editor - cannot update diagram node!');
+        }
         const jsonContent = JSON.stringify(this.project.toJSON(), null, 2);
         const fileData = Buffer.from(jsonContent, 'utf8');
         await vscode.workspace.fs.writeFile(context.destination, fileData);
