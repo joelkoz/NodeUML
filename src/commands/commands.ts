@@ -171,9 +171,11 @@ export class AddElement implements ICommand {
             }
         }
         else if (this.jsonElement._type === 'UMLAttribute') {
-            const sourceElement = doc.project.findById(this.jsonElement.type!.$ref);
-            if (sourceElement instanceof meta.DataTypeNode) {
-                this.copyTagDefinitions(sourceElement);
+            if (this?.jsonElement?.type?.$ref) {
+                const sourceElement = doc.project.findById(this.jsonElement.type.$ref);
+                if (sourceElement instanceof meta.DataTypeNode) {
+                    this.copyTagDefinitions(sourceElement);
+                }
             }
         }
     }
