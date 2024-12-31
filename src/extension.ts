@@ -35,6 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
     const treeView = vscode.window.createTreeView('modelExplorer', {
         treeDataProvider: modelTreeProvider,
         dragAndDropController: modelTreeProvider,
+        canSelectMany: true
     });
     context.subscriptions.push(treeView, modelTreeProvider);
 
@@ -142,12 +143,12 @@ export function activate(context: vscode.ExtensionContext) {
                 if (newNode) {
                     // Check to see if the parent node we are targeting will allow the new
                     // node as a child
-                    let isAllowed = parentNode.canBeChild(newNode);
+                    let isAllowed = parentNode.canBeParent(newNode);
                     while (!isAllowed && parentNode._parent instanceof meta.AbstractNode) {
                         // The selected node is not allowed to have the new node as a child. Maybe they
                         // can share an ancestor
                         parentNode = parentNode._parent;
-                        isAllowed = parentNode.canBeChild(newNode);
+                        isAllowed = parentNode.canBeParent(newNode);
                     }
                     if (isAllowed) {
                         execAddElement(parentNode, newNode, payload.opts);
@@ -242,16 +243,19 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.registerWebviewViewProvider('propertiesView', propertiesProvider)
     );
     
+
     // Synchronize the properties editor with the model tree view
     treeView.onDidChangeSelection((event) => {
         const selectedNode = event.selection[0] as meta.AbstractNode | undefined;
         if (selectedNode && selectedNode instanceof meta.MetaElementNode) {
             propertiesProvider.setSelectedNode(selectedNode);
             modelTreeProvider.selectedNode = selectedNode;
+            vscode.commands.executeCommand('setContext', 'canPasteInto', isPasteValid(selectedNode));        
         }
         else {
             propertiesProvider.setSelectedNode(null);
             modelTreeProvider.selectedNode = null;
+            vscode.commands.executeCommand('setContext', 'canPasteInto', false);
         }
     });
 
@@ -335,4 +339,75 @@ export function activate(context: vscode.ExtensionContext) {
         propertiesProvider.refresh();
     });
 
+    let globalClipboard: { type: string; data: any[] } | null = null;
+
+    // Default is "no paste allowed"
+    vscode.commands.executeCommand('setContext', 'canPasteInto', false);
+
+    function isPasteValid(targetNode: meta.AbstractNode) {
+        return globalClipboard?.data.every(json => targetNode.canBeParentOfType(json._type));
+    }
+
+
+
+    vscode.commands.registerCommand('nodeuml.copyNode', () => {
+        const selectedNodes = treeView.selection;
+        if (!selectedNodes || selectedNodes.length === 0) { return; }
+    
+        const nodeType = selectedNodes[0]._type;
+        const validSelection = selectedNodes.every(node => node._type === nodeType);
+        if (!validSelection) {
+            vscode.window.showErrorMessage("Cannot copy mixed types of nodes.");
+            return;
+        }
+    
+        const clipboard = selectedNodes.map(node => {
+            const json = node.toJSON(false);
+            delete json._id;
+            delete json._parent;
+            return json;
+        });
+    
+        globalClipboard = { type: nodeType, data: clipboard };
+        console.log(`Copied ${clipboard.length} ${nodeType} node(s).`);
+    });
+    
+    
+    vscode.commands.registerCommand('nodeuml.pasteNode', () => {
+        if (openProjects.currentProject === null) {
+            return;
+        }
+
+        const clipboard = globalClipboard;
+        if (!clipboard || !clipboard.data || clipboard.data.length === 0) { return; };
+    
+        const targetNode = modelTreeProvider.selectedNode;
+        if (!targetNode) {
+            vscode.window.showErrorMessage("Select a valid target to paste into.");
+            return;
+        }
+    
+        const targetParent = !isPasteValid(targetNode) && targetNode._parent instanceof meta.AbstractNode ? targetNode._parent : targetNode;
+    
+        if (!targetParent || !isPasteValid(targetParent)) {
+            vscode.window.showErrorMessage("Paste operation is not valid for the selected target.");
+            return;
+        }
+    
+        const batchCommand = new cmd.BatchCommand("Paste Nodes");
+    
+        clipboard.data.forEach(json => {
+            const newNode = openProjects.currentProject!.metaFactory(json);
+            if (newNode) {
+                const addCommand = new cmd.AddElement(targetParent, newNode, {});
+                batchCommand.add(addCommand);   
+            }
+        });
+    
+        openProjects.currentProjectDoc!.exec(batchCommand);
+        console.log(`Pasted ${clipboard.data.length} ${clipboard.type} node(s).`);
+        modelTreeProvider.refresh();
+    });
+    
+    
 }

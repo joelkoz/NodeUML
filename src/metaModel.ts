@@ -137,9 +137,19 @@ export class AbstractNode {
     }
 
     // Returns TRUE if the prospect node can be a child of this node
-    canBeChild(prospect: AbstractNode): boolean {
-        return this.allowableChildren().some((allowedClass) => prospect instanceof allowedClass);
+    canBeParent(prospectChild: AbstractNode): boolean {
+        return this.allowableChildren().some((allowedChildClass) => prospectChild instanceof allowedChildClass);
     }
+
+    // Returns TRUE if the type name string specified in childTypeName matches
+    // the _type field of any of the allowableChildren of this node
+    canBeParentOfType(childTypeName: string): boolean {
+        return this.allowableChildren().some((allowedChildClass) => { 
+            const childInstance = new allowedChildClass('example');
+            return (childTypeName === childInstance._type); 
+        });
+    }
+
 
     getChildren(): AbstractNode[] {
         return [];
