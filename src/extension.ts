@@ -396,7 +396,7 @@ export function activate(context: vscode.ExtensionContext) {
             return;
         }
 
-        if (rightClickNode?._id != modelTreeProvider.selectedNode?._id) {
+        if (rightClickNode?._id !== modelTreeProvider.selectedNode?._id) {
             vscode.window.showErrorMessage("Make node the selected node before pasting");
             return;
         }
