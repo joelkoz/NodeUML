@@ -376,6 +376,13 @@ export function activate(context: vscode.ExtensionContext) {
             if (!preserveChildrenTypes.includes(node._type)) {
                 json.ownedElements = [];
             }
+            else {
+                // blank out id's of owned elements
+                json.ownedElements.forEach((child: any) => {
+                    delete child._id;
+                    delete child._parent;
+                });
+            }
             return json;
         });
     
@@ -384,8 +391,13 @@ export function activate(context: vscode.ExtensionContext) {
     });
     
     
-    vscode.commands.registerCommand('nodeuml.pasteNode', () => {
+    vscode.commands.registerCommand('nodeuml.pasteNode', (rightClickNode) => {
         if (openProjects.currentProject === null) {
+            return;
+        }
+
+        if (rightClickNode?._id != modelTreeProvider.selectedNode?._id) {
+            vscode.window.showErrorMessage("Make node the selected node before pasting");
             return;
         }
 
