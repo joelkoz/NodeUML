@@ -1,4 +1,4 @@
-import { ActiveTool, ClassToolBox, LinkToolBox, ActorToolBox, HighlightAnchorPoints, activeClassEditor, UndoFunctions, ShapeMoveUndo } from './diagramTools.js';
+import { ActiveTool, ClassToolBox, LinkToolBox, ActorToolBox, HighlightAnchorPoints, ActiveClassEditor, UndoFunctions, ShapeMoveUndo } from './diagramTools.js';
 import { msgClient, rpcClient } from './messageBus.js';
 import { VerticalPusherTool, HorizontalPusherTool } from './pusherTools.js';
 import { shapeCache } from './shapeCache.js';
@@ -327,8 +327,8 @@ async function refreshClassShapes(metaNode) {
 
   if (metaNode) {
       await refreshMetaShapes(metaNode._id, metaNode);
-      if (activeClassEditor) {
-          activeClassEditor.setModel(metaNode);
+      if (ActiveClassEditor.editor) {
+          ActiveClassEditor.editor.setModel(metaNode);
       }
   }
 }
@@ -347,19 +347,7 @@ shapeFactory.set('UMLClass', {
     },
 
     onAfterAddToGraph(classNode, umlClass, opts) {
-        if (opts.autoEditClassDef) {
-            const classView = paper.findViewByModel(umlClass);
-            const classTools = ClassToolBox.defaultTools; // Make sure the singleton is initialized
-            const classDefEditorTool = ClassToolBox.defaultToolBox.classDefEditorTool;
-
-            // Simulate an event
-            const mockEvent = new Event('click');
-
-            // Call the action programmatically
-            if (classDefEditorTool) {
-                classDefEditorTool.options.action(mockEvent, classView, classDefEditorTool);
-            }            
-        }
+        ActiveClassEditor.onCreate(umlClass);
     }, 
 
     update: (classNode) => {

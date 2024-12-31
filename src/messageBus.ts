@@ -72,8 +72,7 @@ export interface PLCreateNewMeta {
         pos: {
             x: number;
             y: number;
-        },
-        autoEditClassDef: boolean | undefined;
+        }
     }
 };
 

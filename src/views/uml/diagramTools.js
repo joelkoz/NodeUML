@@ -1,7 +1,7 @@
 import { ClassDefEditor } from "./classDefEditor.js";
 
 import { CommandPalette, icons } from "./commandPalette.js";
-import { verticalPusherTool, horizontalPusherTool, createMetaShape } from "./diagramEditor.js";
+import { verticalPusherTool, horizontalPusherTool, paper } from "./diagramEditor.js";
 import { metaModel } from "./metaModel.js";
 import { msgClient } from "./messageBus.js";
 
@@ -62,7 +62,26 @@ function confirmChoice(opts) {
     return Swal.fire(params);
 }
 
-export var activeClassEditor = null;
+export class ActiveClassEditor {
+    static editor = null;
+    static _invokeOnCreate = false;
+    static onCreate(umlClass) {
+        if (ActiveClassEditor._invokeOnCreate) {
+            const classView = paper.findViewByModel(umlClass);
+            const classTools = ClassToolBox.defaultTools; // Make sure the singleton is initialized
+            const classDefEditorTool = ClassToolBox.defaultToolBox.classDefEditorTool;
+
+            // Simulate an event
+            const mockEvent = new Event('click');
+
+            // Call the action programmatically
+            if (classDefEditorTool) {
+                classDefEditorTool.options.action(mockEvent, classView, classDefEditorTool);
+            }
+            ActiveClassEditor._invokeOnCreate = false;
+        }
+    }
+}
 
 async function getDataTypeIdByName(name, dtCache) {
    const node = await metaModel.findDataType(name, dtCache);
@@ -113,9 +132,9 @@ export class ClassToolBox {
             scale: 1.5,
             action: async function(evt, classView, tool) {
 
-                activeClassEditor = new ClassDefEditor();
+                ActiveClassEditor.editor = new ClassDefEditor();
                 const jsonClass = await metaModel.findId(classView.model.attributes.metaId);
-                activeClassEditor.setModel(jsonClass);
+                ActiveClassEditor.editor.setModel(jsonClass);
 
                 const editorDivWidth = 441; // Width of the DIV
                 const scrollContainer = document.getElementById('scroll-container');
@@ -131,16 +150,16 @@ export class ClassToolBox {
                 // Check if the DIV fits to the right
                 if (classTopRight.x + editorDivWidth <= paperWidth) {
                     // Position the DIV to the right
-                    activeClassEditor.setPosition(classTopRight.x+1, 30);
+                    ActiveClassEditor.editor.setPosition(classTopRight.x+1, 30);
                 } else {
                     // Position the DIV to the left
                     let x = classTopLeft.x - editorDivWidth-2;
                     if (x < 0) { x = 0; }
-                    activeClassEditor.setPosition(x, 30);
+                    ActiveClassEditor.editor.setPosition(x, 30);
                 }
 
                 // Handle meta modification events
-                activeClassEditor.onNameChange = async function(newName) {
+                ActiveClassEditor.editor.onNameChange = async function(newName) {
                     msgClient.publish('cmdUpdateMetaProperties', { 
                         metaId: classMetaId,
                         updates: [
@@ -149,7 +168,7 @@ export class ClassToolBox {
                     });
                 };
 
-                activeClassEditor.onStereotypeChange = async function(newStereotype) {
+                ActiveClassEditor.editor.onStereotypeChange = async function(newStereotype) {
                     let newValue;
                     if (newStereotype) {
                         newValue = [ { $ref: newStereotype._id } ];
@@ -166,7 +185,7 @@ export class ClassToolBox {
 
 
                 const classMetaId = jsonClass._id;
-                activeClassEditor.onNewAttribute = async function(jsonAttribute) {
+                ActiveClassEditor.editor.onNewAttribute = async function(jsonAttribute) {
                     msgClient.publish('cmdCreateNewMeta', { 
                         jsonMeta: {
                             _parent: { $ref: classMetaId }, 
@@ -180,7 +199,7 @@ export class ClassToolBox {
                     });
                 };
 
-                activeClassEditor.onUpdateAttribute = async function(jsonAttribute) {
+                ActiveClassEditor.editor.onUpdateAttribute = async function(jsonAttribute) {
                     msgClient.publish('cmdUpdateMetaProperties', { 
                         metaId: jsonAttribute._id,
                         updates: [
@@ -192,11 +211,11 @@ export class ClassToolBox {
                     });
                 };
 
-                activeClassEditor.onRemoveAttribute = function(metaId) {
+                ActiveClassEditor.editor.onRemoveAttribute = function(metaId) {
                     msgClient.publish('cmdRemoveMeta', metaId);
                 };
 
-                activeClassEditor.onNewOperation = async function(jsonOperation) {
+                ActiveClassEditor.editor.onNewOperation = async function(jsonOperation) {
                     const jsonMeta = await getOperationJson(jsonOperation, classMetaId);
                     msgClient.publish('cmdCreateNewMeta', { 
                         jsonMeta, 
@@ -204,7 +223,7 @@ export class ClassToolBox {
                     });
                 };
 
-                activeClassEditor.onUpdateOperation = async function(jsonOperation) {
+                ActiveClassEditor.editor.onUpdateOperation = async function(jsonOperation) {
                     const jsonMeta = await getOperationJson(jsonOperation, classMetaId);
                     msgClient.publish('cmdUpdateMetaProperties', { 
                         metaId: jsonOperation._id,
@@ -218,15 +237,15 @@ export class ClassToolBox {
                     });
                 };
 
-                activeClassEditor.onRemoveOperation = function(metaId) {
+                ActiveClassEditor.editor.onRemoveOperation = function(metaId) {
                     msgClient.publish('cmdRemoveMeta', metaId);
                 };
 
-                activeClassEditor.onEditorClose = function() {
-                    activeClassEditor = null;
+                ActiveClassEditor.editor.onEditorClose = function() {
+                    ActiveClassEditor.editor = null;
                 };
 
-                activeClassEditor.activate();
+                ActiveClassEditor.editor.activate();
             },
             markup: [{
                 tagName: 'circle',
@@ -298,15 +317,15 @@ export class ClassToolBox {
 
 
 msgClient.subscribe('onCreateMeta', (payload) => {
-    if (activeClassEditor) {
+    if (ActiveClassEditor.editor) {
         // There is a quick editor that is active. Any new attributes or operations
         // created while it is active must belong to the the class that is being edited.
         const { jsonMeta, opts } = payload;
         if (jsonMeta._type === 'UMLAttribute') {
-            activeClassEditor.setAttributeId(jsonMeta.name, jsonMeta._id);
+            ActiveClassEditor.editor.setAttributeId(jsonMeta.name, jsonMeta._id);
         }
         else if (jsonMeta._type === 'UMLOperation') {
-            activeClassEditor.setOperationId(jsonMeta.name, jsonMeta._id);
+            ActiveClassEditor.editor.setOperationId(jsonMeta.name, jsonMeta._id);
         }
     }
 });
@@ -678,16 +697,19 @@ function createNewClassOnClick(stereotypeName) {
             metaModel.findStereotype(stereotypeName)
             .then((stereotype) => {
                 if (stereotype) {
-                    return msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass', stereotypes: [ { $ref: stereotype._id} ]} , opts: { pos: clickPos, autoEditClassDef: true }});
+                    ActiveClassEditor._invokeOnCreate = true;
+                    return msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass', stereotypes: [ { $ref: stereotype._id} ]} , opts: { pos: clickPos }});
                 }
                 else {
-                    console.error(`Could not find stereotype ${stereotypeName} in model. Creating naked class`);                
-                    return msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos, autoEditClassDef: true }});
+                    console.error(`Could not find stereotype ${stereotypeName} in model. Creating naked class`);
+                    ActiveClassEditor._invokeOnCreate = true;              
+                    return msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos}});
                 }
             });
         }
         else {
-            msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos, autoEditClassDef: true }});
+            ActiveClassEditor._invokeOnCreate = true;
+            msgClient.publish('cmdCreateNewMeta', { jsonMeta: { _type: 'UMLClass'} , opts: { pos: clickPos }});
         }
         ActiveTool.clear();          
     };
