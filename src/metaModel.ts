@@ -426,7 +426,7 @@ export class ProfileRootNode extends AbstractNode {
             }
         }
         else {
-            console.log(`ProfileRootNode.removeChild: element ${element._id} is not my child`);
+            console.error(`ProfileRootNode.removeChild: element ${element._id} is not my child`);
         }
     }
 

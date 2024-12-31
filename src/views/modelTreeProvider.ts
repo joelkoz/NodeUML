@@ -131,7 +131,7 @@ export class ModelTreeProvider implements vscode.TreeDataProvider<meta.AbstractN
     }
 
     refresh(element?: meta.AbstractNode): void {
-        console.log('ModelTreeProvider: attempting to refresh tree with node: ' + element?.name || 'undefined');
+        // console.log('ModelTreeProvider: attempting to refresh tree with node: ' + element?.name || 'undefined');
         this._onDidChangeTreeData.fire(element);
     }
 

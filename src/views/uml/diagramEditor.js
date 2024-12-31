@@ -248,7 +248,7 @@ paper.on('blank:pointerdown', (evt, x, y) => {
    if (element) {
        // const elementView = paper.findViewByModel(element);
        // do something with elementView
-       console.log('paper: blank:pointerdown: element is', element?.attributes?.type);
+       // console.log('paper: blank:pointerdown: element is', element?.attributes?.type);
    } else {
        // User clicked on blank space on paper
        if (ActiveTool.onPaperClick) {

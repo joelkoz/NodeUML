@@ -244,7 +244,6 @@ export function activate(context: vscode.ExtensionContext) {
     
     // Synchronize the properties editor with the model tree view
     treeView.onDidChangeSelection((event) => {
-console.log('nodeuml.activate: ModelTreeProvider selection changed');        
         const selectedNode = event.selection[0] as meta.AbstractNode | undefined;
         if (selectedNode && selectedNode instanceof meta.MetaElementNode) {
             propertiesProvider.setSelectedNode(selectedNode);

@@ -1001,7 +1001,6 @@ class BasePanel {
 
       
     setOperationId(nameOfOperation, newMetaId) {
-        console.log('setOperationId');
         if (!this.operationPanel || !this.operationPanel.items) {
           return;
         }

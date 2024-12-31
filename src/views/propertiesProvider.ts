@@ -31,7 +31,6 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
 
     
     setSelectedNode(node: MetaElementNode | null) {
-        console.log('PropertiesProvider: Setting selected node to ' + node?.name || 'null');        
         this._selectedNode = node;
         if (node) {
             this.generateContent(node);
@@ -532,7 +531,7 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
     }
 
     private update() {
-        console.log('PropertiesProvider: update()...');
+        // console.log('PropertiesProvider: update()...');
         if (this._view) {            
             if (this._selectedNode) {
                 this._view.webview.html = this.getHtmlForNode();
@@ -601,7 +600,7 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
 
     private handleUpdateProperty(field: string, value: any) {
         if (this._selectedNode) {
-            console.log(`PropertiesProvider: web view sent updateProperty('${field}', ${JSON.stringify(value)})...`);
+            // console.log(`PropertiesProvider: web view sent updateProperty('${field}', ${JSON.stringify(value)})...`);
             // Check if value is a reference object
             vscode.commands.executeCommand('nodeuml.updateProperty', field, value);
 
