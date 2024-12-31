@@ -121,6 +121,15 @@
 - Zoom in/out by scrolling mouse wheel while holding down Cmd key (Mac) or Ctrl key (Windows)
 - Returns to normal 1:1 zoom by double clicking on blank area of diagram
 - Undo/redo actions are supported using standard shortcuts (e.g., `Cmd+Z` on macOS).
+- Copy/Paste actions are supported from right mouse menu in Model Tree
+  - Can copy attributes, operations, tag definitions, and complete classes
+  - Multiple selections are allowed, but they must all be of the same type
+  - Attributes and operations pasted onto a class are added at the end of the class definition
+  - You can copy/paste to the same class
+  - If you copy/paste tag definitions, those definitions will be ADDED to the tag list of the
+    target node, as if they were added with the properties editor.
+  - Due to limitations of VSCode API, you must make a node a selected node with a left click before pasting
+    is available.
 
 ### Code Generation
 1. Use the VSCode Command Palette to run **NodeUML: Configure Code Generator**. Configure the following:
