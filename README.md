@@ -86,11 +86,25 @@
    - **Alternative Method**: Right-click on the model or a package node in the Model Explorer and select **Add Element** > **Class**
 
 ### Adding Attributes and Operations
-- **Preferred Method**: Click the green "+" on a class in the Diagram Editor to open the Attribute/Operation Editor. Use this format:
-  ```
-  [visibility]name: type [multiplicity]
-  ```
-  Example: `+age: Integer [1]`
+- **Preferred Method**: Click the green "+" on a class in the Diagram Editor to open the Class Definition Quick Editor. 
+  - Quickly change class name and stereotype
+  - Press ENTER to advance to next section
+  - Enter one or more attributes using this format:
+    ```
+    [visibility]name: type [multiplicity]
+    ```
+
+    Example: `+age: Integer [1]`
+
+  - Use the up and down arrows in the attributes section to move to next/previous attribute
+  - Enter one or more operations using this format:
+
+    ```
+    [visibility]name(paramName: dataType[multiplicity], paramName2: dataType2[multiplicity]): optionalReturnType
+    ```
+    
+    Example: `+foo(name: String[1]): Integer`
+
 - **Alternative Method**: Right-click a class in the Model Explorer and select **Add Element** > **Attribute** or **Operation**.
 
 ### Profile definitions

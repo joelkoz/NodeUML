@@ -26,7 +26,16 @@
     border: 1px solid var(--vscode-editorWidget-border);
     position: absolute;
   }
+
   
+  .attribute-editor-panel {
+    background-color: var(--vscode-editor-background);
+  }
+
+  .attribute-editor-panel-body {
+    background-color: var(--vscode-input-background);
+  }
+
   /* Center the container if no position is set */
   .attribute-editor-container.centered {
     top: 50%;

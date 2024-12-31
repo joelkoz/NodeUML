@@ -1,5 +1,3 @@
-import { AttributeEditor } from "./attributeEditor.js";
-import { OperationEditor } from "./operationEditor.js";
 import { ClassDefEditor } from "./classDefEditor.js";
 
 import { CommandPalette, icons } from "./commandPalette.js";
@@ -109,8 +107,8 @@ export class ClassToolBox {
         });
 
         this.classDefEditorTool = new joint.elementTools.Button({
-            x: '35%',
-            y: '10%',
+            x: '7%',
+            y: '50%',
             magnet: 'body',
             scale: 1.5,
             action: async function(evt, classView, tool) {
@@ -133,17 +131,15 @@ export class ClassToolBox {
                 // Check if the DIV fits to the right
                 if (classTopRight.x + editorDivWidth <= paperWidth) {
                     // Position the DIV to the right
-                    activeClassEditor.setPosition(classTopRight.x+1, classTopRight.y+20);
+                    activeClassEditor.setPosition(classTopRight.x+1, 30);
                 } else {
                     // Position the DIV to the left
                     let x = classTopLeft.x - editorDivWidth-2;
                     if (x < 0) { x = 0; }
-                    activeClassEditor.setPosition(x, classTopRight.y+20);
+                    activeClassEditor.setPosition(x, 30);
                 }
 
                 // Handle meta modification events
-                const classMetaId = jsonClass._id;
-
                 activeClassEditor.onNameChange = async function(newName) {
                     msgClient.publish('cmdUpdateMetaProperties', { 
                         metaId: classMetaId,
@@ -169,71 +165,8 @@ export class ClassToolBox {
                 };
 
 
-                activeClassEditor.onEditorClose = function() {
-                    activeClassEditor = null;
-                };
-
-                activeClassEditor.activate();
-            },
-            markup: [{
-                tagName: 'circle',
-                selector: 'button',
-                attributes: {
-                    'r': 7,
-                    'fill': '#5bb53f',
-                    'cursor': 'pointer'
-                }
-            }, {
-                tagName: 'path',
-                selector: 'icon',
-                attributes: {
-                    'd': 'M -4 0 L 4 0 M 0 -4 L 0 4',
-                    'fill': 'none',
-                    'stroke': '#FFFFFF',
-                    'stroke-width': 2,
-                    'pointer-events': 'none'
-                }
-            }]
-        });
-
-
-
-        this.attributeEditorTool = new joint.elementTools.Button({
-            x: '7%',
-            y: '50%',
-            magnet: 'body',
-            scale: 1.5,
-            action: async function(evt, classView, tool) {
-
-                activeClassEditor = new AttributeEditor();
-                const jsonClass = await metaModel.findId(classView.model.attributes.metaId);
-                activeClassEditor.setModel(jsonClass);
-
-                const editorDivWidth = 441; // Width of the DIV
-                const scrollContainer = document.getElementById('scroll-container');
-                const paperWidth = scrollContainer.offsetWidth;
-
-                // Get the bounding box of the shape
-                const bbox = classView.getBBox();
-
-                // Absolute positions of the shape
-                const classTopRight = classView.paper.localToPagePoint(bbox.x + bbox.width, bbox.y);
-                const classTopLeft = classView.paper.localToPagePoint(bbox.x, bbox.y);
-
-                // Check if the DIV fits to the right
-                if (classTopRight.x + editorDivWidth <= paperWidth) {
-                    // Position the DIV to the right
-                    activeClassEditor.setPosition(classTopRight.x+1, classTopRight.y+20);
-                } else {
-                    // Position the DIV to the left
-                    let x = classTopLeft.x - editorDivWidth-2;
-                    if (x < 0) { x = 0; }
-                    activeClassEditor.setPosition(x, classTopRight.y+20);
-                }
-
-                // Handle meta modification events
                 const classMetaId = jsonClass._id;
-                activeClassEditor.onNewItem = async function(jsonAttribute) {
+                activeClassEditor.onNewAttribute = async function(jsonAttribute) {
                     msgClient.publish('cmdCreateNewMeta', { 
                         jsonMeta: {
                             _parent: { $ref: classMetaId }, 
@@ -247,7 +180,7 @@ export class ClassToolBox {
                     });
                 };
 
-                activeClassEditor.onUpdateItem = async function(jsonAttribute) {
+                activeClassEditor.onUpdateAttribute = async function(jsonAttribute) {
                     msgClient.publish('cmdUpdateMetaProperties', { 
                         metaId: jsonAttribute._id,
                         updates: [
@@ -259,73 +192,11 @@ export class ClassToolBox {
                     });
                 };
 
-                activeClassEditor.onRemoveItem = function(metaId) {
+                activeClassEditor.onRemoveAttribute = function(metaId) {
                     msgClient.publish('cmdRemoveMeta', metaId);
                 };
 
-                activeClassEditor.onEditorClose = function() {
-                    activeClassEditor = null;
-                };
-
-                activeClassEditor.activate();
-            },
-            markup: [{
-                tagName: 'circle',
-                selector: 'button',
-                attributes: {
-                    'r': 7,
-                    'fill': '#5bb53f',
-                    'cursor': 'pointer'
-                }
-            }, {
-                tagName: 'path',
-                selector: 'icon',
-                attributes: {
-                    'd': 'M -4 0 L 4 0 M 0 -4 L 0 4',
-                    'fill': 'none',
-                    'stroke': '#FFFFFF',
-                    'stroke-width': 2,
-                    'pointer-events': 'none'
-                }
-            }]
-        });
-
-        this.operationEditorTool = new joint.elementTools.Button({
-            x: '7%',
-            y: '95%',
-            magnet: 'body',
-            scale: 1.5,
-            action: async function(evt, classView, tool) {
-
-                activeClassEditor = new OperationEditor();
-                const jsonClass = await metaModel.findId(classView.model.attributes.metaId);
-                activeClassEditor.setModel(jsonClass);
-
-                const editorDivWidth = 441; // Width of the DIV
-                const scrollContainer = document.getElementById('scroll-container');
-                const paperWidth = scrollContainer.offsetWidth;
-
-                // Get the bounding box of the shape
-                const bbox = classView.getBBox();
-
-                // Absolute positions of the shape
-                const classTopRight = classView.paper.localToPagePoint(bbox.x + bbox.width, bbox.y);
-                const classTopLeft = classView.paper.localToPagePoint(bbox.x, bbox.y);
-
-                // Check if the DIV fits to the right
-                if (classTopRight.x + editorDivWidth <= paperWidth) {
-                    // Position the DIV to the right
-                    activeClassEditor.setPosition(classTopRight.x+1, classTopRight.y+20);
-                } else {
-                    // Position the DIV to the left
-                    let x = classTopLeft.x - editorDivWidth-2;
-                    if (x < 0) { x = 0; }
-                    activeClassEditor.setPosition(x, classTopRight.y+20);
-                }
-
-                // Handle meta modification events
-                const classMetaId = jsonClass._id;
-                activeClassEditor.onNewItem = async function(jsonOperation) {
+                activeClassEditor.onNewOperation = async function(jsonOperation) {
                     const jsonMeta = await getOperationJson(jsonOperation, classMetaId);
                     msgClient.publish('cmdCreateNewMeta', { 
                         jsonMeta, 
@@ -333,7 +204,7 @@ export class ClassToolBox {
                     });
                 };
 
-                activeClassEditor.onUpdateItem = async function(jsonOperation) {
+                activeClassEditor.onUpdateOperation = async function(jsonOperation) {
                     const jsonMeta = await getOperationJson(jsonOperation, classMetaId);
                     msgClient.publish('cmdUpdateMetaProperties', { 
                         metaId: jsonOperation._id,
@@ -347,7 +218,7 @@ export class ClassToolBox {
                     });
                 };
 
-                activeClassEditor.onRemoveItem = function(metaId) {
+                activeClassEditor.onRemoveOperation = function(metaId) {
                     msgClient.publish('cmdRemoveMeta', metaId);
                 };
 
@@ -377,7 +248,6 @@ export class ClassToolBox {
                 }
             }]
         });
-
 
         this.removeButton = new joint.elementTools.Remove({
             focusOpacity: 0.5,
@@ -413,8 +283,6 @@ export class ClassToolBox {
             tools: [
                 this.boundaryTool, 
                 this.classDefEditorTool,
-                this.attributeEditorTool,
-                this.operationEditorTool,
                 this.removeButton
             ]
         });        
@@ -427,6 +295,21 @@ export class ClassToolBox {
         return ClassToolBox.defaultToolBox.toolBox;
     }    
 }
+
+
+msgClient.subscribe('onCreateMeta', (payload) => {
+    if (activeClassEditor) {
+        // There is a quick editor that is active. Any new attributes or operations
+        // created while it is active must belong to the the class that is being edited.
+        const { jsonMeta, opts } = payload;
+        if (jsonMeta._type === 'UMLAttribute') {
+            activeClassEditor.setAttributeId(jsonMeta.name, jsonMeta._id);
+        }
+        else if (jsonMeta._type === 'UMLOperation') {
+            activeClassEditor.setOperationId(jsonMeta.name, jsonMeta._id);
+        }
+    }
+});
 
 
 // Inside of a linkTool anchor method:
