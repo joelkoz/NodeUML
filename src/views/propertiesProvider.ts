@@ -593,20 +593,25 @@ export class PropertiesProvider implements vscode.WebviewViewProvider {
     }
 
 
+    private _ignoreNextRefresh = false;
     public refresh() {
-        this.setSelectedNode(this._selectedNode);
+        if (!this._ignoreNextRefresh) {
+            this.setSelectedNode(this._selectedNode);
+        }
+        this._ignoreNextRefresh = false;
     }
 
 
     private handleUpdateProperty(field: string, value: any) {
         if (this._selectedNode) {
-            // console.log(`PropertiesProvider: web view sent updateProperty('${field}', ${JSON.stringify(value)})...`);
-            // Check if value is a reference object
-            vscode.commands.executeCommand('nodeuml.updateProperty', field, value);
-
-            if (field === 'type' || field === 'stereotypes') {
-                this.refresh();
+            if (field !== 'type' && field !== 'stereotypes') {
+                // The following updateProperty command will trigger a refresh, so ignore the next refresh
+                // unless we just edited the 'type' or 'stereotypes' fields (we need an update for those)
+                this._ignoreNextRefresh = true;
             }
+
+            // console.log(`PropertiesProvider: web view sent updateProperty('${field}', ${JSON.stringify(value)})...`);
+            vscode.commands.executeCommand('nodeuml.updateProperty', field, value);            
         }
     }
 }

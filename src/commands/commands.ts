@@ -413,6 +413,68 @@ export class UpdateProperties implements ICommand {
 
 
 
+export class AddTags implements ICommand {
+
+    private metaId: string;
+    private tagList: any[];
+    private oldValues: any[];
+
+    constructor(targetMetaId: string, tagList: any[]) {
+        this.metaId = targetMetaId;
+        this.tagList = tagList;
+        this.oldValues = [];
+    }
+    
+    private getNewTagList(targetElement: meta.MetaElementNode): meta.TagNode[] {
+
+        // Iterate over the tag list and add each to the newTagValues IF
+        // it does not already exist in the targetElement's tags
+        const newTagValues: { tagName: string, tagValue: string }[] = [];
+        for (const sourceTag of this.tagList) {
+            const targetTag = targetElement.tags.find(t => t.name === sourceTag.name);
+            if (!targetTag) {
+                newTagValues.push({ tagName: sourceTag.name, tagValue: sourceTag.value });
+            }
+        }
+
+        if (targetElement.tags.length > 0 || newTagValues.length > 0) {
+            // Now, make a new array that includes all of the old tags plus the new tags...
+            const newTags: meta.TagNode[] = Array.from(targetElement.tags);
+            for (const newTag of newTagValues) {
+                newTags.push(new meta.TagNode(newTag.tagName, newTag.tagValue));
+            }
+            return newTags;
+        } 
+        return [];
+    }
+
+
+    get label(): string {
+        return `Add tags`;
+    }
+
+
+    execute(doc: ProjectDocument): void {
+        const element = doc.project.findById(this.metaId);
+        if (element instanceof meta.MetaElementNode) {
+            this.oldValues = [...element.tags];
+            const newValues = this.getNewTagList(element);
+            updateMetaProperty(doc, element, 'tags', newValues);
+            msgClient.publish('onUpdateMeta', { projectId: doc.project!._id, element, opts: {} });
+        }
+    }
+
+    undo(doc: ProjectDocument): void {
+        const element = doc.project.findById(this.metaId);
+        if (element instanceof meta.MetaElementNode) {
+            updateMetaProperty(doc, element, 'tags', this.oldValues);
+            msgClient.publish('onUpdateMeta', { projectId: doc.project!._id, element, opts: {} });
+        }
+    }
+}
+
+
+
 export class ChangeParent implements ICommand {
 
     private metaId: string;

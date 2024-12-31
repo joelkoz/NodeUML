@@ -56,7 +56,8 @@ export function activate(context: vscode.ExtensionContext) {
         const { projectId, element, opts } = payload;
         const parent = element._parent as meta.AbstractNode;
         modelTreeProvider.refresh(parent);
-        treeView.reveal(element, { expand: true });        
+        treeView.reveal(element, { expand: true });
+        propertiesProvider.refresh(); 
     });
 
 
@@ -64,6 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
         const { element } = payload;
         modelTreeProvider.refresh(element);
         treeView.reveal(element, { expand: true });
+        propertiesProvider.refresh(); 
     });
 
 
@@ -71,6 +73,7 @@ export function activate(context: vscode.ExtensionContext) {
         const { element } = payload;
         if (element._parent instanceof meta.AbstractNode) {
             modelTreeProvider.refresh(element._parent);
+            propertiesProvider.refresh(); 
         }
     });
 
@@ -345,10 +348,13 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.executeCommand('setContext', 'canPasteInto', false);
 
     function isPasteValid(targetNode: meta.AbstractNode) {
-        return globalClipboard?.data.every(json => targetNode.canBeParentOfType(json._type));
+        if (globalClipboard?.type === 'UMLTag') {
+            return targetNode instanceof meta.MetaElementNode;
+        }
+        else {
+            return globalClipboard?.type && targetNode.canBeParentOfType(globalClipboard.type);
+        }
     }
-
-
 
     vscode.commands.registerCommand('nodeuml.copyNode', () => {
         const selectedNodes = treeView.selection;
@@ -361,15 +367,20 @@ export function activate(context: vscode.ExtensionContext) {
             return;
         }
     
-        const clipboard = selectedNodes.map(node => {
+        const preserveChildrenTypes = [ 'UMLClass', 'UMLOperation'];
+
+        const clipboardData = selectedNodes.map(node => {
             const json = node.toJSON(false);
             delete json._id;
             delete json._parent;
+            if (!preserveChildrenTypes.includes(node._type)) {
+                json.ownedElements = [];
+            }
             return json;
         });
     
-        globalClipboard = { type: nodeType, data: clipboard };
-        console.log(`Copied ${clipboard.length} ${nodeType} node(s).`);
+        globalClipboard = { type: nodeType, data: clipboardData };
+        console.log(`Copied ${clipboardData.length} ${nodeType} node(s).`);
     });
     
     
@@ -382,29 +393,41 @@ export function activate(context: vscode.ExtensionContext) {
         if (!clipboard || !clipboard.data || clipboard.data.length === 0) { return; };
     
         const targetNode = modelTreeProvider.selectedNode;
-        if (!targetNode) {
+        if (!(targetNode instanceof meta.MetaElementNode)) {
             vscode.window.showErrorMessage("Select a valid target to paste into.");
             return;
         }
     
-        const targetParent = !isPasteValid(targetNode) && targetNode._parent instanceof meta.AbstractNode ? targetNode._parent : targetNode;
-    
-        if (!targetParent || !isPasteValid(targetParent)) {
-            vscode.window.showErrorMessage("Paste operation is not valid for the selected target.");
-            return;
+        // Special handling for tags - they are added to the tags property of
+        // the target instead of as a child unless the target is one of a few
+        // special types...
+        const tagParentTypes = ['UMLPackage', 'UMLProfile']; // Which target nodes are actual parents for a paste.
+        if (clipboard.type === 'UMLTag' && !tagParentTypes.includes(targetNode._type)) {
+            // Just add the tag definitions to the target node's tags property.
+            const cmdAddTags = new cmd.AddTags(targetNode._id, clipboard.data );
+            openProjects.currentProjectDoc!.exec(cmdAddTags);
         }
-    
-        const batchCommand = new cmd.BatchCommand("Paste Nodes");
-    
-        clipboard.data.forEach(json => {
-            const newNode = openProjects.currentProject!.metaFactory(json);
-            if (newNode) {
-                const addCommand = new cmd.AddElement(targetParent, newNode, {});
-                batchCommand.add(addCommand);   
+        else {
+            // Normal paste behavior
+            const targetParent = !isPasteValid(targetNode) && targetNode._parent instanceof meta.AbstractNode ? targetNode._parent : targetNode;
+        
+            if (!targetParent || !isPasteValid(targetParent)) {
+                vscode.window.showErrorMessage("Paste operation is not valid for the selected target.");
+                return;
             }
-        });
-    
-        openProjects.currentProjectDoc!.exec(batchCommand);
+        
+            const batchCommand = new cmd.BatchCommand("Paste Nodes");
+        
+            clipboard.data.forEach(json => {
+                const newNode = openProjects.currentProject!.metaFactory(json);
+                if (newNode) {
+                    const addCommand = new cmd.AddElement(targetParent, newNode, {});
+                    batchCommand.add(addCommand);   
+                }
+            });
+        
+            openProjects.currentProjectDoc!.exec(batchCommand);
+        }
         console.log(`Pasted ${clipboard.data.length} ${clipboard.type} node(s).`);
         modelTreeProvider.refresh();
     });
