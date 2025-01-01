@@ -1,6 +1,16 @@
 # NodeUML
 
-**NodeUML** is a Visual Studio Code extension for creating UML class diagrams and generating source code from them. It integrates seamlessly with [NodeMDA](https://github.com/joelkoz/NodeMDA), enabling a model-driven development (MDD) workflow. With NodeUML, you can graphically design your application's architecture, configure the code generator, and produce platform-specific source code directly from your UML models.
+**NodeUML** is a Visual Studio Code extension for creating UML class diagrams and generating source code from them. It integrates seamlessly with [NodeMDA](https://github.com/joelkoz/NodeMDA), enabling a model-driven development (MDD) workflow. With NodeUML, it is as simple as:
+
+## **1. Define your data classes**
+![Define your data classes](/media/NodeUML-create.gif)
+
+## **2. Define your permissions**
+![Define your data classes](/media/NodeUML-permissions.gif)
+
+## **3. Generate your code**
+![Define your data classes](/media/NodeUML-gen.gif)
+
 
 ## Key Features
 
