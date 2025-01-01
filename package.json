@@ -4,15 +4,15 @@
   "description": "Create UML class diagrams and generate code with NodeMDA",
   "publisher": "joelkoz",
   "icon": "media/nodeuml-icon.png",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jkoz/nodeuml.git"
+    "url": "https://github.com/joelkoz/NodeUML.git"
   },
   "bugs": {
-    "url": "https://github.com/jkoz/nodeuml/issues"
+    "url": "https://github.com/joelkoz/NodeUML/issues"
   },
-  "homepage": "https://github.com/jkoz/nodeuml#readme",  
+  "homepage": "https://github.com/joelkoz/NodeUML#README.md",
   "engines": {
     "vscode": "^1.94.0"
   },

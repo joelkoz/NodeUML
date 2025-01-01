@@ -21,3 +21,5 @@ eslint.config.mjs
 *.log
 *.code-workspace
 media/joint.js
+media/*.gif
+media/nodeuml-large.png
