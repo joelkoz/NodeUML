@@ -4,7 +4,7 @@
   "description": "Create UML class diagrams and generate code with NodeMDA",
   "publisher": "joelkoz",
   "icon": "media/nodeuml-icon.png",
-  "version": "0.9.2",
+  "version": "1.0.6",
   "repository": {
     "type": "git",
     "url": "https://github.com/jkoz/nodeuml.git"
@@ -212,7 +212,17 @@
       {
         "command": "nodeuml.importProfile",
         "title": "Import profile"
-      }      
+      },
+      {
+        "command": "nodeuml.copyNode",
+        "title": "Copy",
+        "when": false
+      },
+      {
+        "command": "nodeuml.pasteNode",
+        "title": "Paste",
+        "when": false
+      }    
     ],
     "keybindings": [
       {
@@ -285,7 +295,15 @@
           "label": "Import profile",
           "group": "umlTools",
           "when": "view == modelExplorer && viewItem == Profiles"
-        }        
+        },
+        {
+          "command": "nodeuml.copyNode",
+          "when": "viewItem =~ /UML.*/"
+        },
+        {
+          "command": "nodeuml.pasteNode",
+          "when": "canPasteInto"
+        }            
       ],
       "uml.addElement": [
         {
