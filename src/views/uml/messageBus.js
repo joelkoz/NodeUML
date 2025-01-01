@@ -4,6 +4,7 @@
 
 import { graph } from './diagramEditor.js';
 import { createMetaShape } from './diagramEditor.js';
+import { shapeCache } from './shapeCache.js';
 
 export class VSCMessageClient {
     constructor(vscode) {
@@ -145,6 +146,49 @@ export class RPCServerDiagramPanel extends RPCServer {
         const { jsonMeta, opts } = payload;
         const shape = createMetaShape(jsonMeta, opts);
         return shape?.id;
+    }
+
+    /**
+     * Returns an object that represents the options that would need to be
+     * passed for the "opts" parameter in order to recreate the existing shape 
+     * that currently represents metaId
+     */
+    getCreationOpts(metaId) {
+        const shapeIds = shapeCache.getShapeIds(metaId);
+        if (shapeIds.length > 0) {
+            const shapeId = shapeIds[0];
+            const shape = graph.getCell(shapeId);
+            const shapeType = shape.get('type');
+
+            if (shapeType === 'custom.UMLClass') {
+                // Return the position of the shape...
+                const position = shape.get('position');
+                const x = position.x;
+                const y = position.y;
+                return { pos: { x: position.x, y: position.y } };
+            }
+            else if (shapeType === 'custom.UMLAssociation' ||
+                     shapeType === 'custom.UMLGeneralization' ||
+                     shapeType === 'custom.UMLDependency') {
+                const source = shape.get('source');
+                const sourcePos = { x: source.anchor.args.dx, y: source.anchor.args.dy };
+                const target = shape.get('target');
+                const targetPos = { x: target.anchor.args.dx, y: target.anchor.args.dy };
+                const sourceEnd = shape.get('sourceEnd');
+                const targetEnd = shape.get('targetEnd');
+                return {
+                    sourcePos,
+                    targetPos,
+                    sourceShapeId: sourceEnd.shapeId,
+                    sourceMetaId: sourceEnd.metaId,
+                    targetShapeId: targetEnd.shapeId,
+                    targetMetaId: targetEnd.metaId
+                };
+            }
+        }
+
+        // No specific options
+        return {};
     }
 
  }

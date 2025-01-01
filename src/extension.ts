@@ -95,9 +95,36 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('nodeuml.removeNode', (node) => {
-            const cmdRemoveElement = new cmd.RemoveElement(node, {});
-            openProjects.currentProjectDoc!.exec(cmdRemoveElement);})
+        vscode.commands.registerCommand('nodeuml.removeNode', async (node) => {
+            const opts = await openProjects.getActiveEditor()!.getCreationOpts(node._id);
+            const cmdRemoveElement = new cmd.RemoveElement(node, opts);
+
+            if (node instanceof meta.ClassNode) {
+                // If we are removing a class, we may need to take out any links that
+                // reference this class.
+                const model = openProjects.currentProject!.model;
+                const relatedLinks = meta.AbstractNode.findAllMatchingNodes(model, (element) => {
+                    if (element instanceof meta.LinkNode) {
+                        return element?.end1?.node === node || element?.end2?.node === node;
+                    }
+                    return false;
+                }) as meta.LinkNode[];
+                if (relatedLinks.length > 0) {
+                    // We have related links that need to be removed, so we need to execute
+                    // this in a batch of remove commands.
+                    const cmdBatchRemove = new cmd.BatchCommand(`Remove ${node.name}`);
+                    for (const linkNode of relatedLinks) {
+                        const linkOpts = await openProjects.getActiveEditor()!.getCreationOpts(linkNode._id);
+                        cmdBatchRemove.add(new cmd.RemoveElement(linkNode, linkOpts));
+                    }
+                    cmdBatchRemove.add(cmdRemoveElement);
+                    openProjects.currentProjectDoc!.exec(cmdBatchRemove);
+                    return;
+                }
+            }
+
+            openProjects.currentProjectDoc!.exec(cmdRemoveElement);
+        })
     );
 
 

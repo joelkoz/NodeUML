@@ -247,14 +247,18 @@ export class AbstractNode {
     } 
 
     static findAllNodesOfType(node: AbstractNode, nodeType: string): AbstractNode[] {
+        return AbstractNode.findAllMatchingNodes(node, (child) => child._type === nodeType);
+    }
+
+    static findAllMatchingNodes(node: AbstractNode, matchFunction: (node: AbstractNode) => boolean): AbstractNode[] {
         let result: AbstractNode[] = [];
 
-        if (node._type === nodeType) {
+        if (matchFunction(node)) {
             result.push(node);
         }
 
         for (const child of node.getChildren()) {
-            result = result.concat(AbstractNode.findAllNodesOfType(child, nodeType));
+            result = result.concat(AbstractNode.findAllMatchingNodes(child, matchFunction));
         }
 
         return result;

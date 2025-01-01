@@ -143,6 +143,16 @@ export class DiagramEditor {
         });
     }
 
+    /**
+     * Returns an object that represents the options that would need to be
+     * passed for the "opts" parameter in order to recreate the existing shape 
+     * that currently represents metaId
+     */
+    public async getCreationOpts(metaId: string): Promise<any> {
+        const opts = await this.rpcClient!.call('getCreationOpts', metaId);
+        return opts;
+    }
+
     public diagramUndo(payload: PLWVUndoRedo): void {
         this.wvpMsgClient?.publish('onUndo', payload);
     }

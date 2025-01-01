@@ -277,7 +277,7 @@ export class ClassToolBox {
             action: function(evt, elementView, toolView) {
 
                 confirmChoice({
-                    title: "Remove Element",
+                    title: "Remove Class",
                     inputOptions: {
                         "fromModel": "Remove from model",
                         "fromDiagram": "Remove from diagram only"

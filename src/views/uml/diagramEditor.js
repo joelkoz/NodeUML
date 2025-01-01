@@ -413,6 +413,13 @@ shapeFactory.set('UMLActor', {
 
 shapeFactory.set('UMLAssociation', {
    create: (assocNode, opts) => {
+             if (opts.sourceMetaId && opts.targetMetaId) {
+                // This comes from an undo - we need to fix up the
+                // shape Ids.
+                opts.sourceShapeId = shapeCache.getShapeIds(opts.sourceMetaId)[0];
+                opts.targetShapeId = shapeCache.getShapeIds(opts.targetMetaId)[0];
+             }
+             
              const umlAssoc = new joint.shapes.custom.UMLAssociation({
                    metaId: assocNode._id,
                    sourceEnd: { 
@@ -454,6 +461,13 @@ shapeFactory.set('UMLAssociation', {
 
 shapeFactory.set('UMLDependency', {
    create: (depNode, opts) => {
+      if (opts.sourceMetaId && opts.targetMetaId) {
+         // This comes from an undo - we need to fix up the
+         // shape Ids.
+         opts.sourceShapeId = shapeCache.getShapeIds(opts.sourceMetaId)[0];
+         opts.targetShapeId = shapeCache.getShapeIds(opts.targetMetaId)[0];
+      }
+
       const umlDep = new joint.shapes.custom.UMLDependency({
          metaId: depNode._id,
          sourceEnd: { 
@@ -490,6 +504,13 @@ shapeFactory.set('UMLDependency', {
 
 shapeFactory.set('UMLGeneralization', {
    create: (genNode, opts) => {
+      if (opts.sourceMetaId && opts.targetMetaId) {
+        // This comes from an undo - we need to fix up the
+        // shape Ids.
+        opts.sourceShapeId = shapeCache.getShapeIds(opts.sourceMetaId)[0];
+        opts.targetShapeId = shapeCache.getShapeIds(opts.targetMetaId)[0];
+      }
+
       const umlGen = new joint.shapes.custom.UMLGeneralization({
          metaId: genNode._id,
          sourceEnd: { 
