@@ -160,7 +160,8 @@ export class RPCServerDiagramPanel extends RPCServer {
             const shape = graph.getCell(shapeId);
             const shapeType = shape.get('type');
 
-            if (shapeType === 'custom.UMLClass') {
+            if (shapeType === 'custom.UMLClass' ||
+                shapeType === 'custom.UMLActor') {
                 // Return the position of the shape...
                 const position = shape.get('position');
                 const x = position.x;
