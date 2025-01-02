@@ -190,6 +190,10 @@ Here is an [example of a conversation I had with ChatGPT](https://chatgpt.com/sh
 Next, I plan to create a NodeMDA plugin that generates a prompt to an LLM to write code from specifications generated from the designed UML model
 
 ---
+### Do you find my work useful?
+
+<a href="https://www.buymeacoffee.com/joelkoz" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+---
 
 ## License
 
