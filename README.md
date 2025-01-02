@@ -36,7 +36,10 @@
 
 ### Installation
 
-> **Note**: NodeUML is currently under development. To use the extension, you must build it from source.
+ - Locate NodeUML on the VSCode extension marketplace and install
+
+### Building from source
+ If you would like to customize or otherwise build from source, code is available on GitHub
 
 1. Clone this repository:
    ```bash
