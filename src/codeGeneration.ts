@@ -30,8 +30,16 @@ export async function isNodeMDAInstalled(showMessage = true): Promise<boolean> {
       }
 
       // Parse and check version
-      const version = stdout.trim();
-      const requiredVersion = '1.2.0';
+      const output = stdout.trim();
+      const lfIndex = output.lastIndexOf('\n');
+      let version;
+      if (lfIndex > 0) {
+        version = output.substring(lfIndex + 1);
+      }
+      else {
+        version = output;
+      }
+      const requiredVersion = '2.1.0';
       if (compareVersions(version, requiredVersion) < 0) {
         vscode.window.showWarningMessage(
           `NodeMDA version ${version} is installed, but version ${requiredVersion} or greater is required.`
@@ -47,7 +55,7 @@ export async function isNodeMDAInstalled(showMessage = true): Promise<boolean> {
           vscode.window.showErrorMessage(
             `Error checking NodeMDA readers: ${readersStderr || readersError.message}`
           );
-          setNodeMDAStatus('Out of date');
+          setNodeMDAStatus('Reader not installed');
           resolve(false);
           return;
         }
@@ -111,10 +119,10 @@ export function installNodeMDAPlugin() {
   });
 }
 
-async function getAvailablePlatforms(): Promise<string[]> {
+async function getAvailablePlugins(): Promise<string[]> {
   return new Promise((resolve, reject) => {
     // Execute the "nodemda platforms" command
-    exec('nodemda platforms', (error, stdout, stderr) => {
+    exec('nodemda plugins', (error, stdout, stderr) => {
       if (error) {
         vscode.window.showErrorMessage(`Error running nodemda: ${stderr || error.message}`);
         reject([]);
@@ -140,15 +148,15 @@ async function getAvailablePlatforms(): Promise<string[]> {
 
 
 export async function selectTargetPlatform() {
-  const platforms = await getAvailablePlatforms();
+  const platforms = await getAvailablePlugins();
 
   if (platforms.length === 0) {
-    vscode.window.showErrorMessage('No platforms available. Install NodeMDA plugins.');
+    vscode.window.showErrorMessage('No plugins available. Install NodeMDA plugins.');
     return;
   }
 
   const selected = await vscode.window.showQuickPick(platforms, {
-    placeHolder: 'Select the target platform',
+    placeHolder: 'Select the stack to use',
   });
 
   if (!selected) {
@@ -159,7 +167,7 @@ export async function selectTargetPlatform() {
   const optWorkspace = 'All folders in this workspace';
   const optUser = 'Always for me (User)';
   const scope = await vscode.window.showQuickPick([optFolder, optWorkspace, optUser], {
-    placeHolder: 'Use this target platform for?',
+    placeHolder: 'Use this stack for?',
   });
 
   if (!scope) {
@@ -175,7 +183,7 @@ export async function selectTargetPlatform() {
     .getConfiguration('nodeuml.nodemda', activeFolder)
     .update('targetPlatform', selected, targetScope);
 
-  console.log(`Target platform set to: ${selected} for scope ${targetScope}`);
+  console.log(`Target stack set to: ${selected} for scope ${targetScope}`);
 
 
   // Refresh the display
@@ -236,7 +244,7 @@ export async function generateCode() {
   const readerModuleName = 'nodemda-nodeuml';
   const command = [
     'nodemda gen',
-    `--platform "${platform}"`,
+    `--stack "${platform}"`,
     `--reader "${readerModuleName}"`,
     `--model "${modelFileName}"`,
     `--output "${outputDirectory}"`,
