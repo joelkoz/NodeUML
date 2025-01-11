@@ -347,12 +347,14 @@ export class ProjectNode extends AbstractNode {
 
     static getBlankProject(name: string = 'untitled'): ProjectNode {
         const project = new ProjectNode(name);
-        project.model.addChild(new ClassDiagramNode('Class Diagram'));
+        const diagram = new ClassDiagramNode('Class Diagram');
+        project.model.addChild(diagram);
 
         const profDataTypes = project.profiles.addProfile(new ProfileNode('Data Types'));
             const pkgPrimatives = profDataTypes.addChild(new PackageNode('Primatives'));
                 pkgPrimatives.addChild(new DataTypeNode('void'));
-                pkgPrimatives.addChild(new DataTypeNode('String'));
+                const dtString = new DataTypeNode('String');
+                pkgPrimatives.addChild(dtString);
                 const number = pkgPrimatives.addChild(new DataTypeNode('Number'));
                     number.addTagValue('minVal', '-999999999.9999');
                     number.addTagValue('maxVal', '999999999.9999');
@@ -376,14 +378,16 @@ export class ProjectNode extends AbstractNode {
                     currency.addTagValue('maxVal', '999999999.99');
 
             const pkgTech = profDataTypes.addChild(new PackageNode('Technology'));
-                pkgTech.addChild(new DataTypeNode('Password'));
+                const dtPassword = new DataTypeNode('Password');
+                pkgTech.addChild(dtPassword);
                 pkgTech.addChild(new DataTypeNode('Email'));
                 pkgTech.addChild(new DataTypeNode('Url'));
 
 
         const profKoaReact = project.profiles.addProfile(new ProfileNode('NodeMDA'));
             const pkgStereo = profKoaReact.addChild(new PackageNode('Stereotypes'));
-                pkgStereo.addChild(new StereotypeNode('Entity'));
+                const stEntity = new StereotypeNode('Entity');
+                pkgStereo.addChild(stEntity);
                 pkgStereo.addChild(new StereotypeNode('Enumeration'));
                 pkgStereo.addChild(new StereotypeNode('POJO'));
                 pkgStereo.addChild(new StereotypeNode('Service'));
@@ -392,6 +396,8 @@ export class ProjectNode extends AbstractNode {
                 pkgActors.addChild(new ActorNode('User'));
                 pkgActors.addChild(new ActorNode('Admin'));
                 pkgActors.addChild(new ActorNode('Guest'));
+                const dtSecurityRole = new DataTypeNode('SecurityRole');
+                pkgActors.addChild(dtSecurityRole);
 
             const pkgTags = profKoaReact.addChild(new PackageNode('Special tags'));        
                 const pkgTagEntity = pkgTags.addChild(new PackageNode('For Entities'));
@@ -403,6 +409,89 @@ export class ProjectNode extends AbstractNode {
                     pkgTagAttributes.addChild(new TagNode('dbIndex', 'true'));
                 const pkgTagDep = pkgTags.addChild(new PackageNode('For Dependencies'));
                     pkgTagDep.addChild(new TagNode('permissions', 'own,read,write,del'));
+
+        const userClass = new ClassNode('User');
+        userClass.stereotypes.push(stEntity);
+
+        const attrUserName = new AttributeNode('username');
+        attrUserName.type = dtString;
+        attrUserName.multiplicity = "1";
+        userClass.addChild(attrUserName);
+
+        const attrPassword = new AttributeNode('password');
+        attrPassword.type = dtPassword;
+        attrPassword.multiplicity = "1";
+        userClass.addChild(attrPassword);
+
+        const attrSecurityRole = new AttributeNode('roles');
+        attrSecurityRole.type = dtSecurityRole;
+        attrSecurityRole.multiplicity = "0..*";
+        userClass.addChild(attrSecurityRole);
+
+        project.model.addChild(userClass);
+
+        diagram.graph = {
+            "cells": [
+              {
+                "type": "custom.UMLClass",
+                "metaId": userClass._id,
+                "name": "User",
+                "packageName": "(root)",
+                "stereotypes": [
+                  "<<Entity>>"
+                ],
+                "attributes": [
+                  "+username: String [1]",
+                  "+password: Password [1]",
+                  "+roles: SecurityRole [0..*]"
+                ],
+                "methods": [
+                  ""
+                ],
+                "position": {
+                  "x": 30,
+                  "y": 30
+                },
+                "size": {
+                  "width": 234.5,
+                  "height": 140.14
+                },
+                "angle": 0,
+                "id": "61b10d2c-d952-4540-8975-7ba86d8d9c75",
+                "z": 1,
+                "attrs": {
+                  "umlClassNameRect": {
+                    "height": 63.14
+                  },
+                  "umlClassAttrsRect": {
+                    "height": 54,
+                    "transform": "translate(0,63.14)"
+                  },
+                  "umlClassMethodsRect": {
+                    "height": 23,
+                    "transform": "translate(0,117.14)"
+                  },
+                  "umlClassStereoText": {
+                    "text": "<<Entity>>"
+                  },
+                  "umlClassPackageText": {
+                    "ref-y": 19.44,
+                    "text": "(root)"
+                  },
+                  "umlClassNameText": {
+                    "ref-y": 37.44,
+                    "text": "User"
+                  },
+                  "umlClassAttrsText": {
+                    "text": "+username: String [1]\n+password: Password [1]\n+roles: SecurityRole [0..*]"
+                  },
+                  "umlClassMethodsText": {
+                    "text": ""
+                  }
+                }
+              }
+            ]
+          };
 
         return project;        
     }
