@@ -396,8 +396,8 @@ export class ProjectNode extends AbstractNode {
                 pkgActors.addChild(new ActorNode('User'));
                 pkgActors.addChild(new ActorNode('Admin'));
                 pkgActors.addChild(new ActorNode('Guest'));
-                const dtSecurityRole = new DataTypeNode('SecurityRole');
-                pkgActors.addChild(dtSecurityRole);
+                const dtSystemRole = new DataTypeNode('SystemRole');
+                pkgActors.addChild(dtSystemRole);
 
             const pkgTags = profKoaReact.addChild(new PackageNode('Special tags'));        
                 const pkgTagEntity = pkgTags.addChild(new PackageNode('For Entities'));
@@ -423,10 +423,10 @@ export class ProjectNode extends AbstractNode {
         attrPassword.multiplicity = "1";
         userClass.addChild(attrPassword);
 
-        const attrSecurityRole = new AttributeNode('roles');
-        attrSecurityRole.type = dtSecurityRole;
-        attrSecurityRole.multiplicity = "0..*";
-        userClass.addChild(attrSecurityRole);
+        const attrSystemRole = new AttributeNode('roles');
+        attrSystemRole.type = dtSystemRole;
+        attrSystemRole.multiplicity = "0..*";
+        userClass.addChild(attrSystemRole);
 
         project.model.addChild(userClass);
 
